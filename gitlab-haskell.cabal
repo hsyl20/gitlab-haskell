@@ -1,4 +1,4 @@
-cabal-version: 1.12
+cabal-version: 2.4
 name:           gitlab-haskell
 category:       Git
 version:        0.1.0.0
@@ -14,7 +14,7 @@ bug-reports:    https://gitlab.com/robstewart57/gitlab-haskell/issues
 author:         Rob Stewart
 maintainer:     robstewart57@gmail.com
 copyright:      2019 Rob Stewart, Heriot-Watt University
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
