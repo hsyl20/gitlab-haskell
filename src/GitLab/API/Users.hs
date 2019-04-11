@@ -11,25 +11,10 @@ Stability   : stable
 -}
 module GitLab.API.Users where
 
-import Control.Concurrent.Async
-import Control.Monad
 import Control.Monad.IO.Class
-import Control.Monad.Trans.Reader
-import Data.Aeson
-import qualified Data.ByteString.Lazy as BSL
 import Data.List
-import Data.Map (Map)
-import qualified Data.Map as Map
 import Data.Maybe
 import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import Data.Time.Clock
-import GHC.Generics
-import Network.HTTP.Conduit
-import Network.HTTP.Types.Status
-import Network.HTTP.Types.URI
-import System.IO
 
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls

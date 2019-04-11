@@ -31,8 +31,8 @@ projectCommits' projectId =
   gitlab (commitsAddr projectId)
   where
     commitsAddr :: Int -> Text
-    commitsAddr projectId =
-      "/projects/" <> T.pack (show projectId) <> "/repository" <> "/commits"
+    commitsAddr projId =
+      "/projects/" <> T.pack (show projId) <> "/repository" <> "/commits"
 
 -- | returns a commit for the given project and commit hash, if such
 -- a commit exists.
@@ -52,9 +52,9 @@ commitDetails' projectId hash =
   gitlabOne (commitsAddr projectId)
   where
     commitsAddr :: Int -> Text
-    commitsAddr projectId =
+    commitsAddr projId =
       "/projects/"
-      <> T.pack (show projectId)
+      <> T.pack (show projId)
       <> "/repository"
       <> "/commits"
       <> "/" <> hash

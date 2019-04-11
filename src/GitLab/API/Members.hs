@@ -11,16 +11,10 @@ Stability   : stable
 -}
 module GitLab.API.Members where
 
-import Control.Concurrent.Async
-import Control.Monad
 import Control.Monad.IO.Class
-import Control.Monad.Trans.Reader
-import Data.List
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time.Calendar
 import Network.HTTP.Types.Status
-import System.IO
 
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
@@ -61,8 +55,8 @@ addMemberToProject ::
      -> AccessLevel -- ^ level of access
      -> User -- ^ the user
      -> GitLab m (Either Status Member)
-addMemberToProject project access user =
-  addMemberToProject' (project_id project) access (user_id user)
+addMemberToProject project access usr =
+  addMemberToProject' (project_id project) access (user_id usr)
 
 -- | adds a user to a project with the given access level, given the
 -- project's ID and the user's ID. Returns @Right Member@ for each

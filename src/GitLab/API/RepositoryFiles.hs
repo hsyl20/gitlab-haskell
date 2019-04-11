@@ -32,8 +32,8 @@ repositoryFiles' :: (MonadIO m)
   -> Text -- ^ the file path
   -> Text -- ^ name of the branch, tag or commit
   -> GitLab m (Maybe RepositoryFile)
-repositoryFiles' projectId filePath ref =
-  gitlabWithAttrsOne addr ("&ref=" <> ref)
+repositoryFiles' projectId filePath reference =
+  gitlabWithAttrsOne addr ("&ref=" <> reference)
   where
     addr =
       "/projects/"

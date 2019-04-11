@@ -11,25 +11,14 @@ Stability   : stable
 -}
 module GitLab.API.Projects where
 
-import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.IO.Unlift
-import Control.Monad.Trans.Reader
-import Data.Aeson
-import qualified Data.ByteString.Lazy as BSL
 import Data.List
-import Data.Map (Map)
-import qualified Data.Map as Map
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import Data.Time.Clock
-import GHC.Generics
-import Network.HTTP.Conduit
-import Network.HTTP.Types.Status
 import Network.HTTP.Types.URI
-import System.IO
 import UnliftIO.Async
 
 import GitLab.API.Commits
@@ -52,11 +41,11 @@ projectForks :: (MonadUnliftIO m, MonadIO m)
   => Text -- ^ name or namespace of the project
   -> GitLab m [Project]
 projectForks projectName = do
-  let path =
+  let urlPath =
         "/projects/" <>
         T.decodeUtf8 (urlEncode False (T.encodeUtf8 projectName)) <>
         "/forks"
-  gitlab path
+  gitlab urlPath
 
 -- | searches for a 'Project' with the given project ID, returns
 -- 'Nothing' if a project with the given ID is not found.
@@ -64,8 +53,8 @@ searchProjectId :: (MonadIO m)
   => Int -- ^ project ID
   -> GitLab m (Maybe Project)
 searchProjectId projectId = do
-  let path = T.pack ("/projects/" <> show projectId)
-  gitlabOne path
+  let urlPath = T.pack ("/projects/" <> show projectId)
+  gitlabOne urlPath
 
 -- | gets all projects with the given project name.
 --
@@ -119,9 +108,9 @@ userProjects username = do
   userMaybe <- searchUser username
   case userMaybe of
     Nothing -> return Nothing
-    Just user -> Just <$> gitlab (path (user_id user))
+    Just usr -> Just <$> gitlab (urlPath (user_id usr))
   where
-    path userId = "/users/" <> T.pack (show userId) <> "/projects"
+    urlPath userId = "/users/" <> T.pack (show userId) <> "/projects"
 
 -- | gets the 'GitLab.Types.Project' against which the given 'Issue'
 -- was created.
@@ -138,12 +127,12 @@ projectOfIssue issue =
 -- user has created issues for.
 issuesCreatedByUser :: (MonadUnliftIO m, MonadIO m) => Text -> GitLab m (Maybe (User,[Project]))
 issuesCreatedByUser username = do
-  user <- searchUser username
-  case user of
+  user_maybe <- searchUser username
+  case user_maybe of
     Nothing -> return Nothing
     Just usr -> do
-      issues <- userIssues usr
-      projects <- mapConcurrently projectOfIssue issues
+      usersIssues <- userIssues usr
+      projects <- mapConcurrently projectOfIssue usersIssues
       return (Just (usr, projects))
 
 -- | searches for all projects with the given name, and returns a list
@@ -157,10 +146,14 @@ issuesOnForks projectName = do
   projects <- projectsWithName projectName
   mapM processProject projects
   where
+    processProject ::
+         (MonadUnliftIO m, MonadIO m)
+      => Project
+      -> GitLab m (Project, [Issue], [User])
     processProject proj = do
-      issues <- projectOpenedIssues proj
-      let authors = map issue_author issues
-      return (proj, issues, authors)
+      (openIssues :: [Issue]) <- projectOpenedIssues proj
+      let authors = map issue_author openIssues
+      return (proj, openIssues, authors)
 
 -- | returns a (namespace,members) tuple for the given 'Project',
 -- where namespace is the namespace of the project
@@ -187,7 +180,7 @@ projectCISuccess project = do
   pipes <- pipelines project
   case pipes of
     [] -> return False
-    (x:xs) -> return (pipeline_status x == "success")
+    (x:_) -> return (pipeline_status x == "success")
 
 -- | searches for a username, and returns a user ID for that user, or
 -- 'Nothing' if a user cannot be found. 
@@ -195,7 +188,7 @@ namespacePathToUserId :: (MonadIO m)
   => Text -- ^ name or namespace of project 
   -> GitLab m (Maybe Int)
 namespacePathToUserId namespacePath = do
-  user <- searchUser namespacePath
-  case user of
+  user_maybe <- searchUser namespacePath
+  case user_maybe of
     Nothing -> return Nothing
-    Just user -> return (Just (user_id user))
+    Just usr -> return (Just (user_id usr))

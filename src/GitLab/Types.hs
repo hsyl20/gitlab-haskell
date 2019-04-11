@@ -36,16 +36,11 @@ module GitLab.Types
   , MergeRequest(..)
   ) where
 
-import qualified Data.ByteString.Lazy as BSL
 import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import Network.HTTP.Conduit
--- import APICalls
 import Control.Monad.Trans.Reader
-import Network.Connection (TLSSettings (..))
 
 -- | type synonym for all GitLab actions.
 type GitLab m a = ReaderT GitLabState m a

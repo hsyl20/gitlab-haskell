@@ -6,16 +6,6 @@ synopsis:       A Haskell library for the GitLab web API
 description:
   This Haskell library queries and updates the database of a GitLab instance using the GitLab web API: <https://docs.gitlab.com/ee/api/>
   .
-  An example that returns projects for which issue creation is enabled is:
-  .
-  > projectsWithIssuesEnabled :: IO [Project]
-  > projectsWithIssuesEnabled = runGitLab myConfig $ filter (issueEnabled . issues_enabled) <$> allProjects
-  >   where myConfig = defaultGitLabServer
-  >             { url = "https://gitlab.example.com"
-  >             , token = "my_access_token" }
-  >         issueEnabled Nothing = False
-  >         issueEnabled (Just t) = t
-  .
   Unsurprisingly, GitLab hosts this Haskell library: <https://gitlab.com/robstewart57/gitlab-haskell>
  
                 
@@ -61,13 +51,9 @@ library
               , aeson
               , bytestring
               , text
-              , async
               , http-types
-              , containers
-              , random
-              , array
-              , time
               , transformers
               , unliftio
               , unliftio-core
   default-language: Haskell2010
+  ghc-options: -Wall

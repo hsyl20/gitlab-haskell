@@ -11,20 +11,11 @@ Stability   : stable
 -}
 module GitLab.API.Groups where
 
-import Control.Concurrent.Async
-import Control.Monad
 import Control.Monad.IO.Class
-import Control.Monad.Trans.Reader
-import Data.Aeson
-import qualified Data.ByteString.Lazy as BSL
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import GHC.Generics
-import Network.HTTP.Conduit
 import Network.HTTP.Types.Status
-import Network.HTTP.Types.URI
 
 import GitLab.API.Members
 import GitLab.API.Users
@@ -49,7 +40,8 @@ addUserToGroup ::
   -> AccessLevel -- ^ level of access granted
   -> User -- ^ the user
   -> GitLab m (Either Status Member)
-addUserToGroup groupName access user = addUserToGroup' groupName access (user_id user)
+addUserToGroup groupName access usr =
+  addUserToGroup' groupName access (user_id usr)
 
 -- | adds a list of users to a group.
 addUsersToGroup ::

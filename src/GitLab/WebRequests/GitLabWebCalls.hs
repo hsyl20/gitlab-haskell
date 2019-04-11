@@ -11,7 +11,6 @@ module GitLab.WebRequests.GitLabWebCalls
   , gitlabPost
   ) where
 
-import Network.Connection (TLSSettings (..))
 import Network.HTTP.Conduit
 import qualified Data.ByteString.Lazy as BSL
 import Data.Text (Text)
@@ -19,7 +18,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Aeson
 import qualified Control.Exception as E
-import System.IO
 import Network.HTTP.Types.Status
 import GitLab.Types
 import Control.Monad.Trans.Reader
@@ -42,10 +40,12 @@ gitlabPost urlPath dataBody = do
                 , requestBody = RequestBodyBS (T.encodeUtf8 dataBody) }
   res <- liftIO $ tryGitLab 0 request (retries cfg) manager Nothing
   case responseStatus res of
-    status@(Status 404 msg) -> return (Left status)
-    status@(Status 409 msg) -> return (Left status)
+    resp@(Status 404 _msg) -> return (Left resp)
+    resp@(Status 409 _msg) -> return (Left resp)
     _ -> return (case parseBSOne (responseBody res) of
-                   Just x -> Right x)
+                   Just x -> Right x
+                   Nothing -> Left $
+                     mkStatus 409 "unable to parse POST response")
 
 tryGitLab ::
      Int -- ^ the current retry count
@@ -54,12 +54,12 @@ tryGitLab ::
   -> Manager -- ^ HTTP manager
   -> Maybe HttpException -- ^ the exception to report if maximum retries met
   -> IO (Response BSL.ByteString)
-tryGitLab i request retries manager ex
-  | i == retries = error (show ex)
+tryGitLab i request maxRetries manager lastException
+  | i == maxRetries = error (show lastException)
   | otherwise =
       httpLbs request manager
       `E.catch`
-        \ex -> tryGitLab (i+1) request retries manager (Just ex)
+        \ex -> tryGitLab (i+1) request maxRetries manager (Just ex)
 
 parseBSOne :: FromJSON a => BSL.ByteString -> Maybe a
 parseBSOne bs =
@@ -142,5 +142,5 @@ totalPages resp =
   in findPages hdrs
   where
     findPages [] = 1 -- error "cannot find X-Total-Pages in header"
-    findPages (("X-Total-Pages",bs):xs) = read (T.unpack (T.decodeUtf8 bs))
+    findPages (("X-Total-Pages",bs):_) = read (T.unpack (T.decodeUtf8 bs))
     findPages (_:xs) = findPages xs
