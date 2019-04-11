@@ -1,7 +1,7 @@
 # A Haskell library for the GitLab web API
 
-A library that interacts with a GitLab server's API. It supports
-queries about and updates to:
+This library interacts with a GitLab server's API. It supports queries
+about and updates to:
 
 * Branches
 * Commits
