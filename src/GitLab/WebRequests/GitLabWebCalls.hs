@@ -64,7 +64,9 @@ tryGitLab i request maxRetries manager lastException
 parseBSOne :: FromJSON a => BSL.ByteString -> Maybe a
 parseBSOne bs =
   case eitherDecode bs of
-    Left s -> error (show s)
+    Left _err -> Nothing
+      -- useful when debugging
+      -- error (show _err)
     Right xs -> Just xs
 
 parseBSMany :: FromJSON a => BSL.ByteString -> [a]
@@ -102,7 +104,7 @@ gitlabReq urlPath attrs =
       else go (i+1) accum'
 
 gitlabReqOne :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Maybe a)
-gitlabReqOne urlPath attrs =
+gitlabReqOne urlPath attrs = do
   go
   where
     go = do
