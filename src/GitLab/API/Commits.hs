@@ -28,7 +28,7 @@ projectCommits' :: (MonadIO m)
   => Int -- ^ project ID
   -> GitLab m [Commit]
 projectCommits' projectId =
-  gitlab (commitsAddr projectId)
+  gitlabWithAttrs (commitsAddr projectId) "&with_stats=true"
   where
     commitsAddr :: Int -> Text
     commitsAddr projId =
