@@ -21,13 +21,14 @@ module GitLab.Types
   , Owner(..)
   , Permissions(..)
   , Project(..)
+  , ProjectStats(..)
   , User(..)
   , Milestone(..)
   , TimeStats(..)
   , Issue(..)
   , Pipeline(..)
   , Commit(..)
-  , Stats(..)
+  , CommitStats(..)
   , Repository(..)
   , Job(..)
   , Artifact(..)
@@ -172,6 +173,18 @@ data Project =
   , printing_merge_request_link_enabled :: Maybe Bool
   , merge_method:: Maybe Text
   , permissions :: Maybe Permissions
+  , project_stats :: Maybe ProjectStats
+  } deriving (Generic, Show, Eq)
+
+data ProjectStats =
+  ProjectStats
+  { commit_count :: Int
+  , storage_size :: Int
+  , repository_size :: Int
+  , wiki_size :: Maybe Int
+  , lfs_objects_size :: Maybe Int
+  , job_artifacts_size :: Maybe Int
+  , packages_size :: Maybe Int
   } deriving (Generic, Show, Eq)
 
 -- | registered users.
@@ -263,12 +276,12 @@ data Commit =
   , message :: Text
   , parent_ids :: Maybe [Text]
   , last_pipeline :: Maybe Pipeline
-  , stats :: Maybe Stats
+  , commit_stats :: Maybe CommitStats
   , commit_status :: Maybe Text
   } deriving (Generic, Show)
 
 -- | commit stats.
-data Stats =
+data CommitStats =
   Stats
   { additions :: Int
   , deletions :: Int
@@ -496,6 +509,8 @@ bodyNoPrefix "merge_request_web_url" = "web_url"
 bodyNoPrefix "merge_request_time_stats" = "time_stats"
 bodyNoPrefix "merge_request_squash" = "squash"
 bodyNoPrefix "merge_request_approvals_before_merge" = "approvals_before_merge"
+bodyNoPrefix "project_stats" = "statistics"
+bodyNoPrefix "commit_stats" = "stats"
 
 
 
@@ -527,7 +542,7 @@ instance FromJSON Commit where
               (defaultOptions
                { fieldLabelModifier = bodyNoPrefix })
 
-instance FromJSON Stats where
+instance FromJSON CommitStats where
   parseJSON = genericParseJSON
               (defaultOptions
                { fieldLabelModifier = bodyNoPrefix })
@@ -563,6 +578,11 @@ instance FromJSON Namespace where
                { fieldLabelModifier = bodyNoPrefix })
 
 instance FromJSON Project where
+  parseJSON = genericParseJSON
+              (defaultOptions
+               { fieldLabelModifier = bodyNoPrefix })
+
+instance FromJSON ProjectStats where
   parseJSON = genericParseJSON
               (defaultOptions
                { fieldLabelModifier = bodyNoPrefix })
