@@ -31,7 +31,7 @@ import GitLab.WebRequests.GitLabWebCalls
 -- | gets all projects.
 allProjects :: (MonadIO m) => GitLab m [Project]
 allProjects =
-  gitlab "/projects"
+  gitlabWithAttrs "/projects" "&statistics=true"
 
 -- | gets all forks of a project. Supports use of namespaces.
 --
@@ -54,7 +54,7 @@ searchProjectId :: (MonadIO m)
   -> GitLab m (Maybe Project)
 searchProjectId projectId = do
   let urlPath = T.pack ("/projects/" <> show projectId)
-  gitlabOne urlPath
+  gitlabWithAttrsOne urlPath  "&statistics=true"
 
 -- | gets all projects with the given project name.
 --
@@ -74,10 +74,15 @@ projectsWithName projectName =
 projectsWithNameAndUser ::
      (MonadUnliftIO m, MonadIO m) => Text -> Text -> GitLab m (Maybe Project)
 projectsWithNameAndUser username projectName =
-  gitlabOne
+  -- gitlabOne
+  -- ("/projects/" <>
+  --  T.decodeUtf8
+  --     (urlEncode False (T.encodeUtf8 (username <> "/" <> projectName))))
+  gitlabWithAttrsOne
   ("/projects/" <>
    T.decodeUtf8
       (urlEncode False (T.encodeUtf8 (username <> "/" <> projectName))))
+  "&statistics=true"
 
 -- | returns 'True' if a project has multiple committers, according to
 -- the email addresses of the commits.
@@ -102,15 +107,19 @@ commitsEmailAddresses' projectId = do
 -- | gets all projects for a user's username.
 --
 -- > userProjects "harry"
-userProjects ::
+userProjects' ::
      (MonadUnliftIO m, MonadIO m) => Text -> GitLab m (Maybe [Project])
-userProjects username = do
+userProjects' username = do
   userMaybe <- searchUser username
   case userMaybe of
     Nothing -> return Nothing
     Just usr -> Just <$> gitlab (urlPath (user_id usr))
   where
     urlPath userId = "/users/" <> T.pack (show userId) <> "/projects"
+
+userProjects ::
+     (MonadUnliftIO m, MonadIO m) => User -> GitLab m (Maybe [Project])
+userProjects theUser = userProjects' (user_username theUser)
 
 -- | gets the 'GitLab.Types.Project' against which the given 'Issue'
 -- was created.
