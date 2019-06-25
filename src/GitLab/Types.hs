@@ -29,6 +29,7 @@ module GitLab.Types
   , Pipeline(..)
   , Commit(..)
   , CommitStats(..)
+  , Diff(..)
   , Repository(..)
   , Job(..)
   , Artifact(..)
@@ -286,6 +287,18 @@ data CommitStats =
   { additions :: Int
   , deletions :: Int
   , total :: Int
+  } deriving (Generic, Show)
+
+data Diff =
+  Diff
+  { diff :: Text
+  , new_path :: Text
+  , old_path :: Text
+  , a_mode :: Maybe Text
+  , b_mode :: Maybe Text
+  , new_file :: Bool
+  , renamed_file :: Bool
+  , deleted_file :: Bool
   } deriving (Generic, Show)
 
 -- | repositories.
@@ -613,6 +626,11 @@ instance FromJSON RepositoryFile where
                { fieldLabelModifier = bodyNoPrefix })
 
 instance FromJSON MergeRequest where
+  parseJSON = genericParseJSON
+              (defaultOptions
+               { fieldLabelModifier = bodyNoPrefix })
+
+instance FromJSON Diff where
   parseJSON = genericParseJSON
               (defaultOptions
                { fieldLabelModifier = bodyNoPrefix })
