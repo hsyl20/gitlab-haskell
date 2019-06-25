@@ -201,3 +201,19 @@ namespacePathToUserId namespacePath = do
   case user_maybe of
     Nothing -> return Nothing
     Just usr -> return (Just (user_id usr))
+
+-- | gets all diffs in a project for a given commit SHA.
+projectDiffs :: (MonadIO m) => Project -> Text -> GitLab m [Diff]
+projectDiffs proj commitSha =
+  projectDiffs' (project_id proj) commitSha
+
+-- | gets all diffs in a project for a given project ID, for a given
+-- commit SHA.
+projectDiffs' :: (MonadIO m) => Int -> Text -> GitLab m [Diff]
+projectDiffs' projId commitSha =
+  gitlab
+  ("/projects/"
+   <> T.pack (show projId)
+   <> "/repository/commits/"
+   <> commitSha
+   <> "/diff/")
