@@ -12,6 +12,7 @@ Stability   : stable
 module GitLab.API.Groups where
 
 import Control.Monad.IO.Class
+import Control.Monad.IO.Unlift
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -21,6 +22,16 @@ import GitLab.API.Members
 import GitLab.API.Users
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
+
+-- | gets groups with the given group name.
+--
+-- > projectsWithName "group1"
+groupsWithName :: (MonadUnliftIO m, MonadIO m)
+  => Text -- ^ group name being searched for.
+  -> GitLab m [Group]
+groupsWithName groupName =
+  filter (\group -> groupName == group_path group) <$>
+  gitlabWithAttrs "/groups" ("&search=" <> groupName)
 
 -- | adds all registered users to a group.
 addAllUsersToGroup ::
