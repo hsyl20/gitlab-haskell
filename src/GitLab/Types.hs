@@ -33,6 +33,8 @@ module GitLab.Types
   , Repository(..)
   , Job(..)
   , Artifact(..)
+  , Group(..)
+  , GroupShare(..)
   , Branch(..)
   , RepositoryFile(..)
   , MergeRequest(..)
@@ -344,6 +346,36 @@ data Artifact =
   , file_format :: Maybe Text
   } deriving (Generic, Show)
 
+-- | groups.
+data Group =
+  Group
+  {
+    group_id :: Int
+  , group_name :: Text
+  , group_path :: Text
+  , group_description :: Text
+  , group_visibility :: Text
+  , group_lfs_enabled :: Bool
+  , group_avatar_url :: Maybe Text
+  , group_web_url :: Text
+  , group_request_access_enabled :: Bool
+  , group_full_name :: Text
+  , group_full_path :: Text
+  , group_file_template_project_id :: Maybe Int
+  , group_parent_id :: Maybe Int
+  } deriving (Generic, Show)
+
+  
+-- | response to sharing a project with a group.
+data GroupShare =
+  GroupShare
+  { share_id :: Int
+  , share_project_id :: Int
+  , share_group_id :: Int
+  , share_group_access :: Int
+  , share_expires_at :: Maybe Text
+  } deriving (Generic, Show)
+
 -- | code branches.
 data Branch =
   Branch
@@ -525,6 +557,25 @@ bodyNoPrefix "merge_request_approvals_before_merge" = "approvals_before_merge"
 bodyNoPrefix "project_stats" = "statistics"
 bodyNoPrefix "commit_stats" = "stats"
 
+bodyNoPrefix "share_id" = "id"
+bodyNoPrefix "share_project_id" = "project_id"
+bodyNoPrefix "share_group_id" = "group_id"
+bodyNoPrefix "share_group_access" = "group_access"
+bodyNoPrefix "share_expires_at" = "expires_at"
+
+bodyNoPrefix "group_id" = "id"
+bodyNoPrefix "group_name" = "name"
+bodyNoPrefix "group_path" = "path"
+bodyNoPrefix "group_description" = "description"
+bodyNoPrefix "group_visibility" = "visibility"
+bodyNoPrefix "group_lfs_enabled" = "lfs_enabled"
+bodyNoPrefix "group_avatar_url" = "avatar_url"
+bodyNoPrefix "group_web_url" = "web_url"
+bodyNoPrefix "group_request_access_enabled" = "request_access_enabled"
+bodyNoPrefix "group_full_name" = "full_name"
+bodyNoPrefix "group_full_path" = "full_path"
+bodyNoPrefix "group_file_template_project_id" = "file_template_project_id"
+bodyNoPrefix "group_parent_id" = "parent_id"
 
 
 -- TODO field names for Issues data type
@@ -611,6 +662,16 @@ instance FromJSON Job where
                { fieldLabelModifier = bodyNoPrefix })
 
 instance FromJSON Artifact where
+  parseJSON = genericParseJSON
+              (defaultOptions
+               { fieldLabelModifier = bodyNoPrefix })
+
+instance FromJSON Group where
+  parseJSON = genericParseJSON
+              (defaultOptions
+               { fieldLabelModifier = bodyNoPrefix })
+
+instance FromJSON GroupShare where
   parseJSON = genericParseJSON
               (defaultOptions
                { fieldLabelModifier = bodyNoPrefix })
