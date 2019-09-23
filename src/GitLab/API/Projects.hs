@@ -19,10 +19,12 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Network.HTTP.Types.URI
+import Network.HTTP.Types.Status
 import UnliftIO.Async
 
 import GitLab.API.Commits
 import GitLab.API.Issues
+import GitLab.API.Members
 import GitLab.API.Pipelines
 import GitLab.API.Users
 import GitLab.Types
@@ -217,3 +219,23 @@ projectDiffs' projId commitSha =
    <> "/repository/commits/"
    <> commitSha
    <> "/diff/")
+
+-- | share a project with a group.
+shareProjectWithGroup ::
+     (MonadIO m)
+  => Int -- ^ group ID
+  -> Int -- ^ project ID
+  -> AccessLevel -- ^ level of access granted
+  -> GitLab m (Either Status GroupShare)
+shareProjectWithGroup groupId projectId access =
+  gitlabPost addr dataBody
+  where
+    dataBody :: Text
+    dataBody =
+      "group_id="
+      <> T.pack (show groupId)
+      <> "&group_access="
+      <> T.pack (show access)
+    addr = "/projects/"
+           <> T.pack (show projectId)
+           <> "/share"
