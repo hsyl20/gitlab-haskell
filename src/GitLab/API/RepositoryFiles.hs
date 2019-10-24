@@ -13,6 +13,8 @@ module GitLab.API.RepositoryFiles where
 import Control.Monad.IO.Unlift
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import Network.HTTP.Types.URI
 
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
@@ -41,4 +43,21 @@ repositoryFiles' projectId filePath reference =
       <> "/repository"
       <> "/files"
       <> "/"
-      <> filePath
+      <> T.decodeUtf8 (urlEncode False (T.encodeUtf8 filePath))
+      -- <> filePath
+
+-- | Get raw data for a given file blob hash.
+repositoryFileBlob :: (MonadIO m)
+  => Int -- ^ project ID
+  -> Text -- ^ blob SHA
+  -> GitLab m String
+repositoryFileBlob projectId blobSha =
+  gitlabReqText addr
+  where
+    addr =
+      "/projects/"
+      <> T.pack (show projectId)
+      <> "/repository"
+      <> "/blobs/"
+      <> blobSha
+      <> "/raw"
