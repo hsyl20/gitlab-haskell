@@ -9,6 +9,7 @@ module GitLab.WebRequests.GitLabWebCalls
   , gitlabOne
   , gitlabWithAttrsOne
   , gitlabPost
+  , gitlabReqText
   ) where
 
 import Network.HTTP.Conduit
@@ -22,6 +23,7 @@ import Network.HTTP.Types.Status
 import GitLab.Types
 import Control.Monad.Trans.Reader
 import Control.Monad.IO.Class
+import Data.ByteString.Lazy.Char8 as C
 
 gitlabPost ::
   (MonadIO m, FromJSON b) =>
@@ -125,6 +127,28 @@ gitlabReqOne urlPath attrs = do
             }
       res <- liftIO $ tryGitLab 0 request (retries cfg) manager Nothing
       return (parseBSOne (responseBody res))
+
+gitlabReqText :: (MonadIO m) => Text -> GitLab m String
+gitlabReqText urlPath = do
+  go
+  where
+    go = do
+      cfg <- serverCfg <$> ask
+      manager <- httpManager <$> ask
+      let url' =
+               url cfg
+            <> "/api/v4"
+            <> urlPath
+            <> "?per_page=100"
+            <> "&page=1"
+      let request' = parseRequest_ (T.unpack url')
+          request = request'
+            { requestHeaders =
+              [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))]
+            , responseTimeout = responseTimeoutMicro (timeout cfg)
+            }
+      res <- liftIO $ tryGitLab 0 request (retries cfg) manager Nothing
+      return (C.unpack (responseBody res))
 
 gitlab :: (MonadIO m, FromJSON a) => Text -> GitLab m [a]
 gitlab addr = gitlabReq addr ""
