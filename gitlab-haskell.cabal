@@ -58,7 +58,7 @@ library
                  src
   build-depends:
                 base >=4.7 && <5
-              , http-conduit >= 2.3.4
+              , http-conduit
               , connection
               , aeson
               , bytestring
