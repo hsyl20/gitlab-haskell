@@ -24,7 +24,7 @@ data Options =
   Options
   { gitlabUrl :: String
   , gitlabToken :: String
-  , addUsersFilename :: String
+  , usersFilename :: String
   , group :: String
   , project :: String
   , addReportersToGroup :: Bool
@@ -70,76 +70,86 @@ parser = Options
     <> help "prints 'yes' or 'no' depending on whether a user exists on the GitLab server" )
 
 processOptions :: Options -> IO ()
-processOptions (Options _url _tok "" _grp _proj True _addGroup _isRegistered) =
-  return ()
-processOptions (Options _url _tok _filename "" _proj True _addGroup _isRegistered) =
-  putStrLn "you must specify a group name too"
-processOptions (Options _gUrl _gToken _fname _groupName _ True True _isRegistered) =
-  putStrLn "you can only choose one of adding users to group or adding group to projects"
+processOptions opts = go
+  where
+    go | addReportersToGroup opts && usersFilename opts == "" =
+           return ()
 
--- add reporters to a group
-processOptions (Options gUrl gToken fname groupName _ True False _isRegistered) = do
-  text <- T.readFile fname
-  let usernames = T.splitOn "," text
-  runGitLab
-    (defaultGitLabServer
-      { url = T.pack gUrl
-      , token = T.pack gToken
-      })
-    (addUsersToGroupDbg (T.pack groupName) Reporter usernames)
-    
--- add group as a member to all projects with a given name, as Reporter
-processOptions (Options gUrl gToken _ groupName projectName False True _isRegistered) = do
-  when (null groupName || null projectName)
-    (error "for --share-project you must specify a group name and a project name")
-  runGitLab
-    (defaultGitLabServer
-      { url = T.pack gUrl
-      , token = T.pack gToken
-      })
-    (do groups <- groupsWithName (T.pack groupName)
-        void $ liftIO $ when (null groups)
-          (error ("group not found: " ++ groupName))
-        void $ liftIO $ when (length groups > 1)
-          (error ("multiple groups found for: " ++ groupName))
-        -- should only be 1 group with this head
-        let grp = head groups
-        projects <- projectsWithName (T.pack projectName)
-        mapM_
-          (\prj -> do
-             result <- shareProjectWithGroup (group_id grp) (project_id prj) Reporter
-             case result of
-               Left st -> liftIO (putStrLn ("unable to share project " ++ show (project_id prj) ++ " with group " ++ show (group_id grp) ++ ". Reason: " ++ show st))
-               Right _details -> liftIO (putStrLn ("Added group " ++ show (group_id grp) ++ " to project " ++ show (project_id prj) ++ " as a Reporter"))
-          )
-          projects
-    )
+       | addReportersToGroup opts && group opts == "" =
+         putStrLn "you must specify a group name too"
 
--- ask if users are registered for a given GitLab server
-processOptions (Options _gUrl _gToken "" __groupName _ False False True) =
-  putStrLn "--registered needs a filename with --filename"
-processOptions (Options gUrl gToken fname _groupName _ False False True) = do
-  text <- T.readFile fname
-  let usernames = T.splitOn "," text
-  runGitLab
-    (defaultGitLabServer
-      { url = T.pack gUrl
-      , token = T.pack gToken
-      })
-    (mapM_
-      (\usrName ->
-          do res <- searchUser usrName
-             -- empty list of returned users
-             if null res
-             then liftIO $ putStrLn (T.unpack usrName ++ ": no")
-             else liftIO $ putStrLn (T.unpack usrName ++ ": yes")
-      )
-      usernames
-    )
+       | addReportersToGroup opts && addGroupToProject opts =
+         putStrLn "you can only choose one of adding users to group or adding group to projects"
 
-processOptions Options{} =
-  error "combination of flags not recognised"
+         -- add reporters to a group
+       | addReportersToGroup opts && usersFilename opts /= "" = do
+           text <- T.readFile (usersFilename opts)
+           let usernames = T.splitOn "," text
+           runGitLab
+             (defaultGitLabServer
+              { url = T.pack (gitlabUrl opts)
+              , token = T.pack (gitlabToken opts)
+              })
+             (addUsersToGroupDbg (T.pack (group opts)) Reporter usernames)
+
+       | not (addReportersToGroup opts) && addGroupToProject opts && null (group opts) && null (project opts) =
+           error "for --share-project you must specify a group name and a project name"
+
+       -- add group as a member to all projects with a given name, as Reporter
+       | not (addReportersToGroup opts) && addGroupToProject opts =
+           runGitLab
+             (defaultGitLabServer
+              { url = T.pack (gitlabUrl opts)
+              , token = T.pack (gitlabToken opts)
+              })
+             (do groups <- groupsWithName (T.pack (group opts))
+                 void $ liftIO $ when (null groups)
+                   (error ("group not found: " ++ group opts))
+                 void $ liftIO $ when (length groups > 1)
+                   (error ("multiple groups found for: " ++ group opts))
+               -- should only be 1 group with this head
+                 let grp = head groups
+                 projects <- projectsWithName (T.pack (project opts))
+                 mapM_
+                   (\prj -> do
+                       result <- shareProjectWithGroup (group_id grp) (project_id prj) Reporter
+                       case result of
+                         Left st -> liftIO (putStrLn ("unable to share project " ++ show (project_id prj) ++ " with group " ++ show (group_id grp) ++ ". Reason: " ++ show st))
+                         Right _details -> liftIO (putStrLn ("Added group " ++ show (group_id grp) ++ " to project " ++ show (project_id prj) ++ " as a Reporter"))
+                   )
+                   projects
+             )
+
+       -- ask if users are registered for a given GitLab server
+       | not (addReportersToGroup opts) && not (addGroupToProject opts) && isRegistered opts =
+           putStrLn "--registered needs a filename with --filename"
   
+       | not (addReportersToGroup opts) && not (addGroupToProject opts) && isRegistered opts && usersFilename opts == "" =
+           putStrLn "--registered needs a filename with --filename"
+
+       | not (addReportersToGroup opts) && not (addGroupToProject opts) && isRegistered opts = do
+           text <- T.readFile (usersFilename opts)
+           let usernames = T.splitOn "," text
+           runGitLab
+             (defaultGitLabServer
+              { url = T.pack (gitlabUrl opts)
+              , token = T.pack (gitlabToken opts)
+              })
+             (mapM_
+               (\usrName ->
+                   do res <- searchUser usrName
+                      -- empty list of returned users
+                      if null res
+                        then liftIO $ putStrLn (T.unpack usrName ++ ": no")
+                        else liftIO $ putStrLn (T.unpack usrName ++ ": yes")
+               )
+               usernames
+             )
+
+       | otherwise =
+            error "combination of flags not recognised"
+  
+
 addUsersToGroupDbg ::
   (MonadIO m) => Text -> AccessLevel -> [Text] -> GitLab m ()
 addUsersToGroupDbg groupName access usernames = do
