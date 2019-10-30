@@ -22,3 +22,7 @@ cabal.project.local~
 .ghc.environment.*
 *_flymake.hs
 *.lock
+*.dump-hi
+*.csv
+*.ps
+*.tmp
