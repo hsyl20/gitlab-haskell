@@ -72,7 +72,7 @@ addUserToGroup' groupName access userId = do
   case groups of
     [] -> return (Left (mkStatus 404 (C.pack "cannot find group")))
     [grp] ->
-      liftIO (print addr) >> gitlabPost addr dataBody
+      gitlabPost addr dataBody
       where
         dataBody :: Text
         dataBody =
