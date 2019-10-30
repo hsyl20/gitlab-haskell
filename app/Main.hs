@@ -266,9 +266,7 @@ addUsersToGroupDbg groupName access usernames = do
                    return Nothing
                  u -> return u
          ) usernames
-  liftIO (mapM_ print users)
-  (results :: [Either Status Member]) <- do
-    liftIO (putStrLn ("group: " <> show groupName))
+  (results :: [Either Status Member]) <-
     addUsersToGroup groupName access users
   liftIO $ mapM_
     (\(result :: Either Status Member) ->
