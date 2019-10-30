@@ -35,6 +35,12 @@ executable gitlab-tools
               , text
               , http-types
               , optparse-applicative
+              , bytestring
+              , moss
+              , filepath
+              , unliftio-core
+              , temporary
+              , directory
   default-language: Haskell2010
 
 library
