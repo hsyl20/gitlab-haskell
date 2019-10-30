@@ -24,6 +24,7 @@ import GitLab.Types
 import Control.Monad.Trans.Reader
 import Control.Monad.IO.Class
 import Data.ByteString.Lazy.Char8 as C
+import Network.HTTP.Types.URI
 
 gitlabPost ::
   (MonadIO m, FromJSON b) =>
@@ -91,7 +92,7 @@ gitlabReq urlPath attrs =
             <> "?per_page=100"
             <> "&page="
             <> T.pack (show i)
-            <> attrs
+            <> T.decodeUtf8 (urlEncode False (T.encodeUtf8 attrs))
       let request' = parseRequest_ (T.unpack url')
           request = request'
             { requestHeaders =
