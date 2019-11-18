@@ -1,5 +1,7 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
 Module      : GitLab.Types
@@ -38,18 +40,25 @@ module GitLab.Types
   , Branch(..)
   , RepositoryFile(..)
   , MergeRequest(..)
+  , Todo(..)
+  , TodoAction(..)
+  , TodoTarget(..)
+  , TodoState(..)
+  , URL
   ) where
 
+import Control.Monad.Trans.Reader
 import Data.Aeson
+import Data.Aeson.Types
 import Data.Text (Text)
+import Data.Time.Clock
 import GHC.Generics
 import Network.HTTP.Conduit
-import Control.Monad.Trans.Reader
 
 -- | type synonym for all GitLab actions.
 type GitLab m a = ReaderT GitLabState m a
 
--- | state used by GitLab actions, used internally. 
+-- | state used by GitLab actions, used internally.
 data GitLabState =
   GitLabState
   { serverCfg :: GitLabServerConfig
@@ -97,7 +106,7 @@ data Namespace =
   , kind :: Text
   , full_path :: Text
   , parent_id :: Maybe Text
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
 -- | links.
 data Links =
@@ -109,7 +118,7 @@ data Links =
   , link_labels :: Text
   , link_events :: Text
   , members :: Text
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
 -- | owners.
 data Owner =
@@ -120,14 +129,14 @@ data Owner =
   , state :: Text
   , owner_avatar_url :: Maybe Text
   , owner_web_url :: Text
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
 -- | permissions.
 data Permissions =
   Permissions
   { project_access :: Maybe Object
   , group_access :: Maybe Object
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
 -- | projects.
 data Project =
@@ -177,7 +186,7 @@ data Project =
   , merge_method:: Maybe Text
   , permissions :: Maybe Permissions
   , project_stats :: Maybe ProjectStats
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
 data ProjectStats =
   ProjectStats
@@ -188,7 +197,7 @@ data ProjectStats =
   , lfs_objects_size :: Maybe Int
   , job_artifacts_size :: Maybe Int
   , packages_size :: Maybe Int
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
 -- | registered users.
 data User =
@@ -199,21 +208,33 @@ data User =
   , user_state :: Text
   , user_avatar_uri :: Maybe Text
   , user_web_url :: Maybe Text
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
--- | project milestones.
+-- | milestones.
+data MilestoneState = MSActive
+                    | MSClosed
+                    deriving (Show)
+instance FromJSON MilestoneState where
+  parseJSON (String "active") = return MSActive
+  parseJSON (String "closed") = return MSClosed
+  parseJSON x = unexpected x
+
 data Milestone =
   Milestone
-  { milestone_project_id :: Int
+  { milestone_project_id :: Maybe Int
+  , milestone_group_id :: Maybe Int
   , milestone_description :: Text
-  , milestone_state :: Text
-  , due_date :: Maybe Text
+  , milestone_state :: MilestoneState
+  , milestone_due_date :: Maybe UTCTime
   , milestone_iid :: Int
-  , milestone_created_at :: Maybe Text
+  , milestone_created_at :: Maybe UTCTime
   , milestone_title :: Text
   , milestone_id :: Int
-  , milestone_updated_at :: Text
-  } deriving (Generic, Show, Eq)
+  , milestone_updated_at :: UTCTime
+  , milestone_web_url :: URL
+  } deriving (Generic, Show)
+instance FromJSON Milestone where
+  parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = drop 10 })
 
 -- | time stats.
 data TimeStats =
@@ -222,7 +243,7 @@ data TimeStats =
   , total_time_spent :: Int
   , humane_time_estimate :: Maybe Int
   , human_total_time_spent :: Maybe Int
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
 -- | project issues.
 data Issue =
@@ -251,7 +272,7 @@ data Issue =
   , weight :: Maybe Text -- Int?
   , discussion_locked :: Maybe Bool
   , time_stats :: TimeStats
-  } deriving (Generic, Show, Eq)
+  } deriving (Generic, Show)
 
 -- | project pipelines
 data Pipeline =
@@ -365,7 +386,6 @@ data Group =
   , group_parent_id :: Maybe Int
   } deriving (Generic, Show)
 
-  
 -- | response to sharing a project with a group.
 data GroupShare =
   GroupShare
@@ -446,61 +466,129 @@ data MergeRequest =
   , merge_request_approvals_before_merge :: Maybe Bool -- ?
   } deriving (Generic, Show)
 
+
+data TodoAction = TAAssigned
+                | TAMentioned
+                | TABuildFailed
+                | TAMarked
+                | TAApprovalRequired
+                | TAUnmergeable
+                | TADirectlyAddressed
+                deriving (Show)
+instance FromJSON TodoAction where
+  parseJSON (String "assigned") = return TAAssigned
+  parseJSON (String "mentioned") = return TAMentioned
+  parseJSON (String "build_failed") = return TABuildFailed
+  parseJSON (String "marked") = return TAMarked
+  parseJSON (String "approval_required") = return TAApprovalRequired
+  parseJSON (String "unmergeable") = return TAUnmergeable
+  parseJSON (String "directly_addressed") = return TADirectlyAddressed
+  parseJSON x = unexpected x
+
+data TodoTarget = TTIssue Issue
+                | TTMergeRequest MergeRequest
+                deriving (Show)
+
+type URL = Text
+
+data TodoState = TSPending
+               | TSDone
+               deriving (Show)
+instance FromJSON TodoState where
+  parseJSON (String "pending") = return TSPending
+  parseJSON (String "done") = return TSDone
+  parseJSON x = unexpected x
+
+data TodoProject = TP { tp_id :: Int
+                      , tp_description :: Text
+                      , tp_name :: Text
+                      , tp_name_with_namespace :: Text
+                      , tp_path :: Text
+                      , tp_path_with_namespace :: Text
+                      , tp_created_at :: UTCTime }
+                 deriving (Generic, Show)
+instance FromJSON TodoProject where
+  parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = drop 3 })
+
+data Todo = Todo { todo_id :: Int
+                 , todo_project :: TodoProject
+                 , todo_author :: User
+                 , todo_action_name :: TodoAction
+                 , todo_target :: TodoTarget
+                 , todo_target_url :: URL
+                 , todo_body :: Text
+                 , todo_state :: TodoState
+                 , todo_created_at :: UTCTime }
+          deriving (Show)
+instance FromJSON Todo where
+  parseJSON = withObject "Todo" $ \v -> Todo
+    <$> v .: "id"
+    <*> v .: "project"
+    <*> v .: "author"
+    <*> v .: "action_name"
+    <*> (v .: "target_type" >>= \case
+      "MergeRequest" -> TTMergeRequest <$> v .: "target"
+      "Issue" -> TTIssue <$> v .: "issue"
+      (_ :: Text) -> fail "" )
+    <*> v .: "target_url"
+    <*> v .: "body"
+    <*> v .: "state"
+    <*> v .: "created_at"
+
 -----------------------------
 -- JSON GitLab parsers below
 -----------------------------
 
 bodyNoPrefix :: String -> String
-bodyNoPrefix "project_id" = "id"
-bodyNoPrefix "namespace_id" = "id"
-bodyNoPrefix "owner_id" = "id"
-bodyNoPrefix "user_id" = "id"
-bodyNoPrefix "repository_id" = "id"
-bodyNoPrefix "project_name" = "name"
-bodyNoPrefix "repository_name" = "name"
-bodyNoPrefix "project_path" = "path"
-bodyNoPrefix "namespace_name" = "name"
-bodyNoPrefix "user_name" = "name"
-bodyNoPrefix "namespace_path" = "path"
-bodyNoPrefix "owner_name" = "name"
-bodyNoPrefix "owner_avatar_url" = "avatar_url"
-bodyNoPrefix "user_avatar_url" = "avatar_url"
-bodyNoPrefix "owner_web_url" = "web_url"
+bodyNoPrefix "commit_created_at" = "created_at"
+bodyNoPrefix "commit_id" = "id"
+bodyNoPrefix "commit_status" = "status"
+bodyNoPrefix "issue_author" = "author"
+bodyNoPrefix "issue_created_at" = "created_at"
+bodyNoPrefix "issue_description" = "description"
+bodyNoPrefix "issue_due_date" = "due_date"
+bodyNoPrefix "issue_id" = "id"
+bodyNoPrefix "issue_labels" = "labels"
+bodyNoPrefix "issue_project_id" = "project_id"
+bodyNoPrefix "issue_state" = "state"
+bodyNoPrefix "issue_title" = "title"
+bodyNoPrefix "issue_web_url" = "web_url"
 bodyNoPrefix "job_web_url" = "web_url"
-bodyNoPrefix "project_avatar_url" = "avatar_url"
-bodyNoPrefix "project_web_url" = "web_url"
+bodyNoPrefix "link_events" = "events"
+bodyNoPrefix "link_labels" = "labels"
+bodyNoPrefix "member_avatar_url" = "avatar_url"
 bodyNoPrefix "member_id" = "id"
 bodyNoPrefix "member_name" = "name"
-bodyNoPrefix "member_avatar_url" = "avatar_url"
-bodyNoPrefix "member_web_url" = "we_url"
-bodyNoPrefix "user_web_url" = "we_url"
-bodyNoPrefix "member_username" = "username"
-bodyNoPrefix "owner_username" = "username"
-bodyNoPrefix "user_username" = "username"
-bodyNoPrefix "pipeline_id" = "id"
-bodyNoPrefix "pipeline_web_url" = "web_url"
-bodyNoPrefix "commit_id" = "id"
 bodyNoPrefix "member_state" = "state"
-bodyNoPrefix "user_state" = "state"
-bodyNoPrefix "issue_state" = "state"
-bodyNoPrefix "issue_description" = "description"
-bodyNoPrefix "issue_author" = "author"
-bodyNoPrefix "issue_project_id" = "project_id"
-bodyNoPrefix "issue_id" = "id"
-bodyNoPrefix "issue_title" = "title"
-bodyNoPrefix "issue_due_date" = "due_date"
-bodyNoPrefix "issue_web_url" = "web_url"
-bodyNoPrefix "commit_status" = "status"
+bodyNoPrefix "member_username" = "username"
+bodyNoPrefix "member_web_url" = "we_url"
+bodyNoPrefix "namespace_id" = "id"
+bodyNoPrefix "namespace_name" = "name"
+bodyNoPrefix "namespace_path" = "path"
+bodyNoPrefix "owner_avatar_url" = "avatar_url"
+bodyNoPrefix "owner_id" = "id"
+bodyNoPrefix "owner_name" = "name"
+bodyNoPrefix "owner_username" = "username"
+bodyNoPrefix "owner_web_url" = "web_url"
+bodyNoPrefix "pipeline_id" = "id"
 bodyNoPrefix "pipeline_status" = "status"
-bodyNoPrefix "issue_labels" = "labels"
-bodyNoPrefix "link_labels" = "labels"
-bodyNoPrefix "issue_created_at" = "created_at"
-bodyNoPrefix "commit_created_at" = "created_at"
+bodyNoPrefix "pipeline_web_url" = "web_url"
+bodyNoPrefix "project_avatar_url" = "avatar_url"
 bodyNoPrefix "project_created_at" = "created_at"
-bodyNoPrefix "milestone_created_at" = "created_at"
-bodyNoPrefix "link_events" = "events"
-bodyNoPrefix "repository_type" = "type"
+bodyNoPrefix "project_id" = "id"
+bodyNoPrefix "project_name" = "name"
+bodyNoPrefix "project_path" = "path"
+bodyNoPrefix "project_web_url" = "web_url"
+bodyNoPrefix "repository_id" = "id"
+bodyNoPrefix "repository_name" = "name"
 bodyNoPrefix "repository_path" = "path"
+bodyNoPrefix "repository_type" = "type"
+bodyNoPrefix "user_avatar_url" = "avatar_url"
+bodyNoPrefix "user_id" = "id"
+bodyNoPrefix "user_name" = "name"
+bodyNoPrefix "user_state" = "state"
+bodyNoPrefix "user_username" = "username"
+bodyNoPrefix "user_web_url" = "we_url"
 
 bodyNoPrefix "event_title" = "title"
 bodyNoPrefix "event_project_id" = "project_id"
@@ -576,17 +664,10 @@ bodyNoPrefix "group_full_name" = "full_name"
 bodyNoPrefix "group_full_path" = "full_path"
 bodyNoPrefix "group_file_template_project_id" = "file_template_project_id"
 bodyNoPrefix "group_parent_id" = "parent_id"
-
-
 -- TODO field names for Issues data type
 bodyNoPrefix s = s
 
 instance FromJSON TimeStats where
-  parseJSON = genericParseJSON
-              (defaultOptions
-               { fieldLabelModifier = bodyNoPrefix })
-
-instance FromJSON Milestone where
   parseJSON = genericParseJSON
               (defaultOptions
                { fieldLabelModifier = bodyNoPrefix })

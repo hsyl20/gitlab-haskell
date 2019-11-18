@@ -1,7 +1,7 @@
 
 {-|
 Module      : GitLab
-Description : Contains the 'runGitLab' function to run GitLab actions 
+Description : Contains the 'runGitLab' function to run GitLab actions
 Copyright   : (c) Rob Stewart, Heriot-Watt University, 2019
 License     : BSD3
 Maintainer  : robstewart57@gmail.com
@@ -22,6 +22,7 @@ module GitLab
   , module GitLab.API.MergeRequests
   , module GitLab.API.Repositories
   , module GitLab.API.RepositoryFiles
+  , module GitLab.API.Todos
   ) where
 
 import Control.Monad.IO.Class
@@ -42,6 +43,7 @@ import GitLab.API.Pipelines
 import GitLab.API.Projects
 import GitLab.API.Repositories
 import GitLab.API.RepositoryFiles
+import GitLab.API.Todos
 import GitLab.API.Users
 import GitLab.Types
 
