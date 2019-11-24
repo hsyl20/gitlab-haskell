@@ -30,6 +30,7 @@ module GitLab.Types
   , Issue(..)
   , Pipeline(..)
   , Commit(..)
+  , CommitTodo(..)
   , CommitStats(..)
   , Diff(..)
   , Repository(..)
