@@ -67,7 +67,7 @@ library
                 base >=4.7 && <5
               , http-conduit
               , connection
-              , aeson
+              , aeson >= 1.4.4.0
               , bytestring
               , text
               , http-types
