@@ -304,6 +304,15 @@ data Commit =
   , commit_status :: Maybe Text
   } deriving (Generic, Show)
 
+-- | summary of a code commit for TODOs.
+data CommitTodo =
+  CommitTodo
+  { todo_commit_id :: Text
+  , todo_commit_short_id :: Text
+  , todo_commit_created_at :: Text
+  , todo_parent_ids :: Maybe [Text]
+  } deriving (Generic, Show)
+
 -- | commit stats.
 data CommitStats =
   Stats
@@ -487,6 +496,7 @@ instance FromJSON TodoAction where
 
 data TodoTarget = TTIssue Issue
                 | TTMergeRequest MergeRequest
+                | TTCommit CommitTodo
                 deriving (Show)
 
 type URL = Text
@@ -528,7 +538,8 @@ instance FromJSON Todo where
     <*> v .: "action_name"
     <*> (v .: "target_type" >>= \case
       "MergeRequest" -> TTMergeRequest <$> v .: "target"
-      "Issue" -> TTIssue <$> v .: "issue"
+      "Issue" -> TTIssue <$> v .: "target"
+      "Commit" -> TTCommit <$> v .: "target"
       (_ :: Text) -> fail "" )
     <*> v .: "target_url"
     <*> v .: "body"
@@ -543,6 +554,10 @@ bodyNoPrefix :: String -> String
 bodyNoPrefix "commit_created_at" = "created_at"
 bodyNoPrefix "commit_id" = "id"
 bodyNoPrefix "commit_status" = "status"
+bodyNoPrefix "todo_commit_id" = "id"
+bodyNoPrefix "todo_commit_short_id" = "short_id"
+bodyNoPrefix "todo_commit_created_at" = "created_at"
+bodyNoPrefix "todo_parent_ids" = "parent_ids"
 bodyNoPrefix "issue_author" = "author"
 bodyNoPrefix "issue_created_at" = "created_at"
 bodyNoPrefix "issue_description" = "description"
@@ -683,6 +698,11 @@ instance FromJSON User where
                { fieldLabelModifier = bodyNoPrefix })
 
 instance FromJSON Commit where
+  parseJSON = genericParseJSON
+              (defaultOptions
+               { fieldLabelModifier = bodyNoPrefix })
+
+instance FromJSON CommitTodo where
   parseJSON = genericParseJSON
               (defaultOptions
                { fieldLabelModifier = bodyNoPrefix })
