@@ -206,8 +206,8 @@ namespacePathToUserId namespacePath = do
 
 -- | gets all diffs in a project for a given commit SHA.
 projectDiffs :: (MonadIO m) => Project -> Text -> GitLab m [Diff]
-projectDiffs proj commitSha =
-  projectDiffs' (project_id proj) commitSha
+projectDiffs proj =
+  projectDiffs' (project_id proj)
 
 -- | gets all diffs in a project for a given project ID, for a given
 -- commit SHA.

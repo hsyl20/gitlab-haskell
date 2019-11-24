@@ -91,8 +91,8 @@ addUsersToGroup ::
   -> AccessLevel -- ^ level of access granted
   -> [User] -- ^ list of usernames to be added to the group
   -> GitLab m [Either Status Member]
-addUsersToGroup groupName access users = do
-  mapM (addUserToGroup groupName access) users
+addUsersToGroup groupName access =
+  mapM (addUserToGroup groupName access)
 
 -- | adds a list of users to a group.
 addUsersToGroup' ::

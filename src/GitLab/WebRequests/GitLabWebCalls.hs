@@ -107,8 +107,7 @@ gitlabReq urlPath attrs =
       else go (i+1) accum'
 
 gitlabReqOne :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Maybe a)
-gitlabReqOne urlPath attrs = do
-  go
+gitlabReqOne urlPath attrs = go
   where
     go = do
       cfg <- serverCfg <$> ask
@@ -130,8 +129,7 @@ gitlabReqOne urlPath attrs = do
       return (parseBSOne (responseBody res))
 
 gitlabReqText :: (MonadIO m) => Text -> GitLab m String
-gitlabReqText urlPath = do
-  go
+gitlabReqText urlPath = go
   where
     go = do
       cfg <- serverCfg <$> ask

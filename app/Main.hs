@@ -232,22 +232,22 @@ processOptions opts = go
         runGitLab
           (defaultGitLabServer
            {url = T.pack (gitlabUrl opts), token = T.pack (gitlabToken opts)})
-          (do mapM_
-                (\username -> do
-                   projects <-
-                     projectsWithNameAndUser username (T.pack (project opts))
-                   case projects of
-                     Nothing -> return ()
-                     Just proj -> do
-                       isPassing <- projectCISuccess proj
-                       numCommits <- projectCommits proj
-                       liftIO $
-                         putStrLn
-                           (T.unpack (project_web_url proj) <> " (" <>
-                            (if isPassing
-                              then "passing, "
-                              else "failing, ")
-                             <> show (length numCommits) <> " commits)"))
+          (mapM_
+            (\username -> do
+                projects <-
+                  projectsWithNameAndUser username (T.pack (project opts))
+                case projects of
+                  Nothing -> return ()
+                  Just proj -> do
+                    isPassing <- projectCISuccess proj
+                    numCommits <- projectCommits proj
+                    liftIO $
+                      putStrLn
+                      (T.unpack (project_web_url proj) <> " (" <>
+                        (if isPassing
+                         then "passing, "
+                         else "failing, ")
+                        <> show (length numCommits) <> " commits)"))
                 usernames)
       | otherwise = error "combination of flags not recognised"
 
@@ -374,7 +374,7 @@ moss skeletonFilename skeletonData studentCode mossUserKey lang = do
     mapM_ (\(userFile,userId) ->
            addFile (T.unpack userId) userFile
           ) userFiles
-    res <- fromJust <$> query (C.pack ("moss-" <> (takeFileName (T.unpack skeletonFilename))))
+    res <- fromJust <$> query (C.pack ("moss-" <> takeFileName (T.unpack skeletonFilename)))
 
     -- remove temporary files
     liftIO $ removeFile tmpSkelFile
