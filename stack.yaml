@@ -1,6 +1,8 @@
 resolver: lts-14.15
+
 packages:
 - .
-extra-deps:
-- moss-0.1.0.0@sha256:b63687194872f50702ccd57f4e09fd67441be283d2597c4ab1a9543c028be2ef,1161
+
+extra-deps: []
+
 ghc-options: {"$locals": -ddump-to-file -ddump-hi}
