@@ -19,6 +19,31 @@ about and updates to:
 The library parses JSON results into Haskell data types in the
 `GitLab.Types` module.
 
+## Example
+
+Run all GitLab actions with `runGitLab`: 
+
+    runGitLab ::
+      (MonadUnliftIO m, MonadIO m)
+       => GitLabServerConfig
+       -> GitLab m a
+       -> m a
+
+For example:
+
+    myTodos <- runGitLab
+                 (defaultGitLabServer
+                   { url = "https://gitlab.example.com"
+                   , token="my_token"} )
+                 todos
+
+Which uses the `todos` function:
+
+    todos :: MonadIO m => GitLab m [Todo] 
+
+This returns all GitLab TODO items, as Haskell values of type `Todo`
+for the user identified with the access token`my_token`.
+
 ## Applications using this library
 
 * `gitlab-tools`: a command line tool for bulk transactions against a
