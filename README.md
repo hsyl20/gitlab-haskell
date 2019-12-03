@@ -44,7 +44,5 @@ Which uses the `todos` function:
 This returns all GitLab TODO items, as Haskell values of type `Todo`
 for the user identified with the access token`my_token`.
 
-## Applications using this library
-
-* `gitlab-tools`: a command line tool for bulk transactions against a
-  GitLab server. [link](https://gitlab.com/robstewart57/gitlab-tools)
+The `gitlab-tools` command line tool for bulk GitLab transactions uses
+this library [link](https://gitlab.com/robstewart57/gitlab-tools).
