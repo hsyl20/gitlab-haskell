@@ -468,11 +468,17 @@ data MergeRequest =
   , merge_request_discussion_locked :: Maybe Bool
   , merge_request_should_remove_source_branch :: Maybe Bool
   , merge_request_force_remove_source_branch :: Maybe Bool
-  -- , merge_request_allow_collaboration :: Bool
-  -- , merge_request_allow_maintainer_to_push :: Bool
+  , merge_request_allow_collaboration :: Maybe Bool
+  , merge_request_allow_maintainer_to_push :: Maybe Bool
   , merge_request_web_url :: Text
   , merge_request_time_stats :: TimeStats
   , merge_request_squash :: Bool
+  , merge_request_changes_count :: Maybe Int
+  , merge_request_pipeline :: Maybe Pipeline
+  , merge_request_diverged_commits_count :: Maybe Int
+  , merge_request_rebase_in_progress :: Maybe Bool
+  , merge_request_has_conflicts :: Bool
+  , merge_request_blocking_discussions_resolved :: Maybe Bool
   , merge_request_approvals_before_merge :: Maybe Bool -- ?
   } deriving (Generic, Show)
 
@@ -658,6 +664,15 @@ bodyNoPrefix "merge_request_web_url" = "web_url"
 bodyNoPrefix "merge_request_time_stats" = "time_stats"
 bodyNoPrefix "merge_request_squash" = "squash"
 bodyNoPrefix "merge_request_approvals_before_merge" = "approvals_before_merge"
+bodyNoPrefix "merge_request_allow_contribution" = "allow_contribution"
+bodyNoPrefix "merge_request_changes_count" = "changes_count"
+bodyNoPrefix "merge_request_pipeline" = "pipeline"
+bodyNoPrefix "merge_request_diverged_commits_count" = "diverged_commits_count"
+bodyNoPrefix "merge_request_rebase_in_progress" = "rebase_in_progress"
+bodyNoPrefix "merge_request_has_conflicts" = "has_conflicts"
+bodyNoPrefix "merge_request_blocking_discussions_resolved" = "blocking_discussions_resolved"
+
+
 bodyNoPrefix "project_stats" = "statistics"
 bodyNoPrefix "commit_stats" = "stats"
 
