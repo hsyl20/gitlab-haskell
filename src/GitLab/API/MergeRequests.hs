@@ -49,7 +49,7 @@ createMergeRequest
 createMergeRequest project =
   createMergeRequest' (project_id project)
   
-  -- | Creates a merge request.
+-- | Creates a merge request.
 createMergeRequest'
   :: (MonadIO m)
   => Int -- ^ project ID
@@ -72,3 +72,29 @@ createMergeRequest' projectId sourceBranch targetBranch targetProjectId mrTitle 
       "&description=" <>
       mrDescription
     addr = T.pack $ "/projects/" <> show projectId <> "/merge_requests"
+
+-- | Accepts a merge request.
+acceptMergeRequest
+  :: (MonadIO m)
+  => Project -- ^ project
+  -> Int -- ^ merge request IID
+  -> GitLab m  (Either Status MergeRequest)
+acceptMergeRequest project =
+  acceptMergeRequest' (project_id project)
+
+-- | Accepts a merge request.
+acceptMergeRequest'
+  :: (MonadIO m)
+  => Int -- ^ project ID
+  -> Int -- ^ merge request IID
+  -> GitLab m  (Either Status MergeRequest)
+acceptMergeRequest' projectId mergeRequestIid = gitlabPost addr dataBody
+  where
+    dataBody :: Text
+    dataBody = T.pack $
+      "id=" <> show projectId <> "&merge_request_iid=" <> show mergeRequestIid
+    addr =
+      T.pack $
+      "/projects/" <> show projectId <> "/merge_requests/" <>
+      show mergeRequestIid <>
+      "/merge"
