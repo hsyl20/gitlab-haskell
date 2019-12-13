@@ -17,6 +17,7 @@ module GitLab.Types
   , GitLabState(..)
   , GitLabServerConfig(..)
   , defaultGitLabServer
+  , ArchiveFormat(..)
   , Member(..)
   , Namespace(..)
   , Links(..)
@@ -84,6 +85,32 @@ defaultGitLabServer =
   , timeout = 15000000 -- 15 seconds
   , retries = 5
   }
+
+-- https://docs.gitlab.com/ee/api/repositories.html#get-file-archive
+-- tar.gz, tar.bz2, tbz, tbz2, tb2, bz2, tar, and zip
+
+-- | archive format for file archives of repositories.
+-- See 'getFileArchive' in 'GitLab.API.Repositories'.
+data ArchiveFormat
+  = TarGz -- ^ ".tar.gz"
+  | TarBz2 -- ^ ".tar.bz2"
+  | Tbz -- ^ ".tbz"
+  | Tbz2 -- ^ ".tbz2"
+  | Tb2 -- ^ ".tb2"
+  | Bz2 -- ^ ".bz2"
+  | Tar -- ^ ".tar"
+  | Zip -- ^ ".zip"
+
+instance Show ArchiveFormat where
+  show TarGz = ".tar.gz"
+  show TarBz2 = ".tar.bz2"
+  show Tbz = ".tbz"
+  show Tbz2 = ".tbz2"
+  show Tb2 = ".tb2"
+  show Bz2 = ".bz2"
+  show Tar = ".tar"
+  show Zip = ".zip"
+
 
 -- | member of a project.
 data Member =

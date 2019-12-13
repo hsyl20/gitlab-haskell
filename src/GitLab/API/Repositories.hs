@@ -11,6 +11,7 @@ Stability   : stable
 module GitLab.API.Repositories where
 
 import Control.Monad.IO.Unlift
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 
 import GitLab.Types
@@ -35,3 +36,34 @@ repositories' projectId =
       <> T.pack (show projectId)
       <> "/repository"
       <> "/tree"
+
+-- | get a file archive of the repository files. For example:
+--
+-- > getFileArchive myProject TarGz "/tmp/myProject.tar.gz"
+getFileArchive :: (MonadIO m)
+  => Project -- ^ project
+  -> ArchiveFormat -- ^ file format
+  -> FilePath -- ^ file path to store the archive
+  -> GitLab m ()
+getFileArchive project = getFileArchive' (project_id project)
+
+-- | get a file archive of the repository files using the project's
+--   ID. For example:
+--
+-- > getFileArchive' 3453 Zip "/tmp/myProject.zip"
+getFileArchive' :: (MonadIO m)
+  => Int -- ^ project ID
+  -> ArchiveFormat -- ^ file format
+  -> FilePath -- ^ file path to store the archive
+  -> GitLab m ()
+getFileArchive' projectId format path = do
+  archiveData <- gitlabReqByteString addr
+  liftIO $ BSL.writeFile path archiveData
+  where
+    addr =
+      "/projects/"
+      <> T.pack (show projectId)
+      <> "/repository"
+      <> "/archive"
+      <> T.pack (show format)
+  
