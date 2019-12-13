@@ -10,6 +10,7 @@ module GitLab.WebRequests.GitLabWebCalls
   , gitlabWithAttrsOne
   , gitlabPost
   , gitlabReqText
+  , gitlabReqByteString
   ) where
 
 import Network.HTTP.Conduit
@@ -78,8 +79,8 @@ parseBSMany bs =
     Left s -> error s
     Right xs -> xs
 
-gitlabReq :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m [a]
-gitlabReq urlPath attrs =
+gitlabReqJsonMany :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m [a]
+gitlabReqJsonMany urlPath attrs =
   go 1 []
   where
     go i accum = do
@@ -106,8 +107,8 @@ gitlabReq urlPath attrs =
       then return accum'
       else go (i+1) accum'
 
-gitlabReqOne :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Maybe a)
-gitlabReqOne urlPath attrs = go
+gitlabReqOne :: (MonadIO m) => (BSL.ByteString -> output) -> Text -> Text -> GitLab m output
+gitlabReqOne parser urlPath attrs = go
   where
     go = do
       cfg <- serverCfg <$> ask
@@ -126,40 +127,28 @@ gitlabReqOne urlPath attrs = go
             , responseTimeout = responseTimeoutMicro (timeout cfg)
             }
       res <- liftIO $ tryGitLab 0 request (retries cfg) manager Nothing
-      return (parseBSOne (responseBody res))
+      return (parser (responseBody res))
+
+gitlabReqJsonOne :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Maybe a)
+gitlabReqJsonOne = gitlabReqOne parseBSOne
 
 gitlabReqText :: (MonadIO m) => Text -> GitLab m String
-gitlabReqText urlPath = go
-  where
-    go = do
-      cfg <- serverCfg <$> ask
-      manager <- httpManager <$> ask
-      let url' =
-               url cfg
-            <> "/api/v4"
-            <> urlPath
-            <> "?per_page=100"
-            <> "&page=1"
-      let request' = parseRequest_ (T.unpack url')
-          request = request'
-            { requestHeaders =
-              [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))]
-            , responseTimeout = responseTimeoutMicro (timeout cfg)
-            }
-      res <- liftIO $ tryGitLab 0 request (retries cfg) manager Nothing
-      return (C.unpack (responseBody res))
+gitlabReqText urlPath = gitlabReqOne C.unpack urlPath ""
+
+gitlabReqByteString :: (MonadIO m) => Text -> GitLab m BSL.ByteString
+gitlabReqByteString urlPath = gitlabReqOne Prelude.id urlPath ""
 
 gitlab :: (MonadIO m, FromJSON a) => Text -> GitLab m [a]
-gitlab addr = gitlabReq addr ""
+gitlab addr = gitlabReqJsonMany addr ""
 
 gitlabOne :: (MonadIO m, FromJSON a) => Text -> GitLab m (Maybe a)
-gitlabOne addr = gitlabReqOne addr ""
+gitlabOne addr = gitlabReqJsonOne addr ""
 
 gitlabWithAttrs :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m [a]
-gitlabWithAttrs  = gitlabReq
+gitlabWithAttrs  = gitlabReqJsonMany
 
 gitlabWithAttrsOne :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Maybe a)
-gitlabWithAttrsOne  = gitlabReqOne
+gitlabWithAttrsOne  = gitlabReqJsonOne
 
 totalPages :: Response a -> Int
 totalPages resp =
