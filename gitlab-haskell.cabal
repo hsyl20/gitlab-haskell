@@ -4,9 +4,28 @@ category:       Git
 version:        0.1.4
 synopsis:       A Haskell library for the GitLab web API
 description:
-  This Haskell library queries and updates the database of a GitLab instance using the GitLab web API: <https://docs.gitlab.com/ee/api/>
-  .
-  Unsurprisingly, GitLab hosts this Haskell library: <https://gitlab.com/robstewart57/gitlab-haskell>
+            This Haskell library queries and updates the database of a GitLab instance using the GitLab web API: <https://docs.gitlab.com/ee/api/>
+            .
+            Run all GitLab actions with `runGitLab`:
+            .
+            > runGitLab :: (MonadUnliftIO m, MonadIO m)
+            >  => GitLabServerConfig -- ^ the GitLab server details
+            >  -> GitLab m a         -- ^ the GitLab action
+            >  -> m a
+            .
+            For example:
+            .
+            > myTodos <- runGitLab
+            >      (defaultGitLabServer
+            >          { url = "https://gitlab.example.com"
+            >          , token="my_token"} )
+            >      todos
+            .
+            Which uses the `todos` function:
+            .
+            > todos :: MonadIO m => GitLab m [Todo] 
+            .
+            Unsurprisingly, this library is maintained on GitLab: <https://gitlab.com/robstewart57/gitlab-haskell>
 
 
 homepage:       https://gitlab.com/robstewart57/gitlab-haskell
