@@ -106,7 +106,7 @@ commitsEmailAddresses' projectId = do
   (commits :: [Commit]) <- projectCommits' projectId
   return (map author_email commits)
 
--- | gets all projects for a user's username.
+-- | gets all projects for a user given their username.
 --
 -- > userProjects "harry"
 userProjects' ::
@@ -119,6 +119,9 @@ userProjects' username = do
   where
     urlPath userId = "/users/" <> T.pack (show userId) <> "/projects"
 
+-- | gets all projects for a user.
+--
+-- > userProjects myUser
 userProjects ::
      (MonadUnliftIO m, MonadIO m) => User -> GitLab m (Maybe [Project])
 userProjects theUser = userProjects' (user_username theUser)

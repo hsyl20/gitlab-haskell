@@ -90,7 +90,7 @@ defaultGitLabServer =
 -- tar.gz, tar.bz2, tbz, tbz2, tb2, bz2, tar, and zip
 
 -- | archive format for file archives of repositories.
--- See 'getFileArchive' in 'GitLab.API.Repositories'.
+-- See 'GitLab.API.Repositories.getFileArchive' in 'GitLab.API.Repositories'.
 data ArchiveFormat
   = TarGz -- ^ ".tar.gz"
   | TarBz2 -- ^ ".tar.bz2"
@@ -216,6 +216,7 @@ data Project =
   , project_stats :: Maybe ProjectStats
   } deriving (Generic, Show)
 
+-- | project statistics.
 data ProjectStats =
   ProjectStats
   { commit_count :: Int
@@ -238,7 +239,7 @@ data User =
   , user_web_url :: Maybe Text
   } deriving (Generic, Show)
 
--- | milestones.
+-- | milestone state.
 data MilestoneState = MSActive
                     | MSClosed
                     deriving (Show)
@@ -247,6 +248,7 @@ instance FromJSON MilestoneState where
   parseJSON (String "closed") = return MSClosed
   parseJSON x = unexpected x
 
+-- | milestones.
 data Milestone =
   Milestone
   { milestone_project_id :: Maybe Int
@@ -349,6 +351,7 @@ data CommitStats =
   , total :: Int
   } deriving (Generic, Show)
 
+-- | diff between two commits.
 data Diff =
   Diff
   { diff :: Text
@@ -509,7 +512,7 @@ data MergeRequest =
   , merge_request_approvals_before_merge :: Maybe Bool -- ?
   } deriving (Generic, Show)
 
-
+-- | TODO actions.
 data TodoAction = TAAssigned
                 | TAMentioned
                 | TABuildFailed
@@ -528,13 +531,16 @@ instance FromJSON TodoAction where
   parseJSON (String "directly_addressed") = return TADirectlyAddressed
   parseJSON x = unexpected x
 
+-- | TODO targets.
 data TodoTarget = TTIssue Issue
                 | TTMergeRequest MergeRequest
                 | TTCommit CommitTodo
                 deriving (Show)
 
+-- | URL is a synonym for 'Text'.
 type URL = Text
 
+-- | TODO states.
 data TodoState = TSPending
                | TSDone
                deriving (Show)
@@ -554,6 +560,7 @@ data TodoProject = TP { tp_id :: Int
 instance FromJSON TodoProject where
   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = drop 3 })
 
+-- | TODOs.
 data Todo = Todo { todo_id :: Int
                  , todo_project :: TodoProject
                  , todo_author :: User
