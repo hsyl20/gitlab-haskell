@@ -47,6 +47,16 @@ getFileArchive :: (MonadIO m)
   -> GitLab m ()
 getFileArchive project = getFileArchive' (project_id project)
 
+-- | get a file archive of the repository files as a
+-- 'BSL.ByteString'. For example:
+--
+-- > getFileArchiveBS myProject TarGz "/tmp/myProject.tar.gz"
+getFileArchiveBS :: (MonadIO m)
+  => Project -- ^ project
+  -> ArchiveFormat -- ^ file format
+  -> GitLab m BSL.ByteString
+getFileArchiveBS project = getFileArchiveBS' (project_id project)
+
 -- | get a file archive of the repository files using the project's
 --   ID. For example:
 --
@@ -57,8 +67,19 @@ getFileArchive' :: (MonadIO m)
   -> FilePath -- ^ file path to store the archive
   -> GitLab m ()
 getFileArchive' projectId format path = do
-  archiveData <- gitlabReqByteString addr
+  archiveData <- getFileArchiveBS' projectId format
   liftIO $ BSL.writeFile path archiveData
+
+-- | get a file archive of the repository files as a 'BSL.ByteString'
+--   using the project's ID. For example:
+--
+-- > getFileArchiveBS' 3453 Zip "/tmp/myProject.zip"
+getFileArchiveBS' :: (MonadIO m)
+  => Int -- ^ project ID
+  -> ArchiveFormat -- ^ file format
+  -> GitLab m BSL.ByteString
+getFileArchiveBS' projectId format = do
+  gitlabReqByteString addr
   where
     addr =
       "/projects/"
@@ -66,4 +87,4 @@ getFileArchive' projectId format path = do
       <> "/repository"
       <> "/archive"
       <> T.pack (show format)
-  
+
