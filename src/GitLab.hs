@@ -9,6 +9,7 @@ Stability   : stable
 -}
 module GitLab
   ( runGitLab
+  , runGitLabWithManager
   , module GitLab.Types
   , module GitLab.API.Pipelines
   , module GitLab.API.Groups
@@ -70,4 +71,11 @@ runGitLab cfg action = do
   liftIO $ hSetBuffering stdout LineBuffering
   let settings = mkManagerSettings (TLSSettingsSimple True False False) Nothing
   manager <- liftIO $ newManager settings
+  runGitLabWithManager manager cfg action
+
+-- | The same as 'runGitLab', except that it also takes a connection
+-- manager as an argument.
+runGitLabWithManager ::
+  (MonadUnliftIO m, MonadIO m) => Manager -> GitLabServerConfig -> GitLab m a -> m a
+runGitLabWithManager manager cfg action = do
   runReaderT action (GitLabState cfg manager)
