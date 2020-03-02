@@ -60,6 +60,7 @@ library
                 , GitLab.API.MergeRequests
                 , GitLab.API.RepositoryFiles
                 , GitLab.API.Todos
+                , GitLab.API.Version
   other-modules:
                   GitLab.WebRequests.GitLabWebCalls
   hs-source-dirs:

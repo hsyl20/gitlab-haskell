@@ -1,27 +1,26 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-{-|
-Module      : Members
-Description : Queries about and updates to members of projects
-Copyright   : (c) Rob Stewart, Heriot-Watt University, 2019
-License     : BSD3
-Maintainer  : robstewart57@gmail.com
-Stability   : stable
--}
+-- |
+-- Module      : Members
+-- Description : Queries about and updates to members of projects
+-- Copyright   : (c) Rob Stewart, Heriot-Watt University, 2019
+-- License     : BSD3
+-- Maintainer  : robstewart57@gmail.com
+-- Stability   : stable
 module GitLab.API.Members where
 
 import Control.Monad.IO.Class
+import Data.Either
 import Data.Text (Text)
 import qualified Data.Text as T
-import Network.HTTP.Types.Status
-
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
+import Network.HTTP.Types.Status
 
 -- | the access levels for project members. See <https://docs.gitlab.com/ee/user/permissions.html#project-members-permissions>
-data AccessLevel =
-  Guest
+data AccessLevel
+  = Guest
   | Reporter
   | Developer
   | Maintainer
@@ -36,10 +35,12 @@ instance Show AccessLevel where
 
 -- | the members of a project.
 membersOfProject :: (MonadIO m) => Project -> GitLab m [Member]
-membersOfProject  = membersOfProject' . project_id
+membersOfProject p = do
+  result <- membersOfProject' (project_id p)
+  return (fromRight (error "membersOfProject error") result)
 
 -- | the members of a project given its ID.
-membersOfProject' :: (MonadIO m) => Int -> GitLab m [Member]
+membersOfProject' :: (MonadIO m) => Int -> GitLab m (Either Status [Member])
 membersOfProject' projectId =
   gitlab addr
   where
@@ -50,11 +51,14 @@ membersOfProject' projectId =
 -- 'Right Member' for each successful action, otherwise it returns
 -- 'Left Status'.
 addMemberToProject ::
-     (MonadIO m)
-     => Project -- ^ the project
-     -> AccessLevel -- ^ level of access
-     -> User -- ^ the user
-     -> GitLab m (Either Status Member)
+  (MonadIO m) =>
+  -- | the project
+  Project ->
+  -- | level of access
+  AccessLevel ->
+  -- | the user
+  User ->
+  GitLab m (Either Status Member)
 addMemberToProject project access usr =
   addMemberToProject' (project_id project) access (user_id usr)
 
@@ -62,30 +66,35 @@ addMemberToProject project access usr =
 -- project's ID and the user's ID. Returns @Right Member@ for each
 -- successful action, otherwise it returns @Left Status@.
 addMemberToProject' ::
-     (MonadIO m)
-     => Int -- ^ project ID
-     -> AccessLevel -- ^ level of access
-     -> Int -- ^ user ID
-     -> GitLab m (Either Status Member)
+  (MonadIO m) =>
+  -- | project ID
+  Int ->
+  -- | level of access
+  AccessLevel ->
+  -- | user ID
+  Int ->
+  GitLab m (Either Status Member)
 addMemberToProject' projectId access userId =
   gitlabPost addr dataBody
   where
     dataBody :: Text
     dataBody =
-        "user_id=" <> T.pack (show userId) <> "&access_level=" <> T.pack (show access)
+      "user_id=" <> T.pack (show userId) <> "&access_level=" <> T.pack (show access)
     addr =
       "/projects/" <> T.pack (show projectId) <> "/members"
-
 
 -- | adds a list of users to a project with the given access
 -- level. Returns 'Right Member' for each successful action, otherwise
 -- it returns 'Left Status'.
 addMembersToProject ::
-     (MonadIO m)
-  => Project -- ^ the project
-  -> AccessLevel -- ^ level of access
-  -> [User] -- ^ users to add to the project
-  -> GitLab m [Either Status Member]
+  (MonadIO m) =>
+  -- | the project
+  Project ->
+  -- | level of access
+  AccessLevel ->
+  -- | users to add to the project
+  [User] ->
+  GitLab m [Either Status Member]
 addMembersToProject project access =
   mapM (addMemberToProject project access)
 
@@ -93,11 +102,13 @@ addMembersToProject project access =
 -- given the project's ID and the user IDs. Returns @Right Member@ for
 -- each successful action, otherwise it returns @Left Status@.
 addMembersToProject' ::
-     (MonadIO m)
-     => Int -- ^ project ID
-     -> AccessLevel -- ^ level of acces
-     -> [Int] -- ^ IDs of users to add to the project
-     -> GitLab m [Either Status Member]
+  (MonadIO m) =>
+  -- | project ID
+  Int ->
+  -- | level of acces
+  AccessLevel ->
+  -- | IDs of users to add to the project
+  [Int] ->
+  GitLab m [Either Status Member]
 addMembersToProject' projectId access =
   mapM (addMemberToProject' projectId access)
-

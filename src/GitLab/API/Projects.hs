@@ -1,27 +1,23 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-{-|
-Module      : Projects
-Description : Queries about projects
-Copyright   : (c) Rob Stewart, Heriot-Watt University, 2019
-License     : BSD3
-Maintainer  : robstewart57@gmail.com
-Stability   : stable
--}
+-- |
+-- Module      : Projects
+-- Description : Queries about projects
+-- Copyright   : (c) Rob Stewart, Heriot-Watt University, 2019
+-- License     : BSD3
+-- Maintainer  : robstewart57@gmail.com
+-- Stability   : stable
 module GitLab.API.Projects where
 
 import Control.Monad.IO.Class
 import Control.Monad.IO.Unlift
+import Data.Either
 import Data.List
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import Network.HTTP.Types.URI
-import Network.HTTP.Types.Status
-import UnliftIO.Async
-
 import GitLab.API.Commits
 import GitLab.API.Issues
 import GitLab.API.Members
@@ -29,62 +25,68 @@ import GitLab.API.Pipelines
 import GitLab.API.Users
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
+import Network.HTTP.Types.Status
+import Network.HTTP.Types.URI
+import UnliftIO.Async
 
 -- | gets all projects.
 allProjects :: (MonadIO m) => GitLab m [Project]
 allProjects =
-  gitlabWithAttrs "/projects" "&statistics=true"
+  gitlabWithAttrsUnsafe "/projects" "&statistics=true"
 
 -- | gets all forks of a project. Supports use of namespaces.
 --
 -- > projectForks "project1"
 -- > projectForks "group1/project1"
-projectForks :: (MonadUnliftIO m, MonadIO m)
-  => Text -- ^ name or namespace of the project
-  -> GitLab m [Project]
+projectForks ::
+  (MonadUnliftIO m, MonadIO m) =>
+  -- | name or namespace of the project
+  Text ->
+  GitLab m (Either Status [Project])
 projectForks projectName = do
   let urlPath =
-        "/projects/" <>
-        T.decodeUtf8 (urlEncode False (T.encodeUtf8 projectName)) <>
-        "/forks"
+        "/projects/"
+          <> T.decodeUtf8 (urlEncode False (T.encodeUtf8 projectName))
+          <> "/forks"
   gitlab urlPath
 
 -- | searches for a 'Project' with the given project ID, returns
 -- 'Nothing' if a project with the given ID is not found.
-searchProjectId :: (MonadIO m)
-  => Int -- ^ project ID
-  -> GitLab m (Maybe Project)
+searchProjectId ::
+  (MonadIO m) =>
+  -- | project ID
+  Int ->
+  GitLab m (Either Status (Maybe Project))
 searchProjectId projectId = do
   let urlPath = T.pack ("/projects/" <> show projectId)
-  gitlabWithAttrsOne urlPath  "&statistics=true"
+  gitlabWithAttrsOne urlPath "&statistics=true"
 
 -- | gets all projects with the given project name.
 --
 -- > projectsWithName "project1"
-projectsWithName :: (MonadUnliftIO m, MonadIO m)
-  => Text -- ^ project name being searched for.
-  -> GitLab m [Project]
+projectsWithName ::
+  (MonadUnliftIO m, MonadIO m) =>
+  -- | project name being searched for.
+  Text ->
+  GitLab m [Project]
 projectsWithName projectName =
-  filter (\project -> projectName == project_path project) <$>
-  gitlabWithAttrs "/projects" ("&search=" <> projectName)
+  filter (\project -> projectName == project_path project)
+    <$> gitlabWithAttrsUnsafe "/projects" ("&search=" <> projectName)
 
--- | gets a project with the given name for the given username. E.g. 
+-- | gets a project with the given name for the given username. E.g.
 --
 -- > projectsNamespaceName "user1" "project1"
 --
 -- looks for "user1/project1"
 projectsWithNameAndUser ::
-     (MonadUnliftIO m, MonadIO m) => Text -> Text -> GitLab m (Maybe Project)
+  (MonadUnliftIO m, MonadIO m) => Text -> Text -> GitLab m (Either Status (Maybe Project))
 projectsWithNameAndUser username projectName =
-  -- gitlabOne
-  -- ("/projects/" <>
-  --  T.decodeUtf8
-  --     (urlEncode False (T.encodeUtf8 (username <> "/" <> projectName))))
   gitlabWithAttrsOne
-  ("/projects/" <>
-   T.decodeUtf8
-      (urlEncode False (T.encodeUtf8 (username <> "/" <> projectName))))
-  "&statistics=true"
+    ( "/projects/"
+        <> T.decodeUtf8
+          (urlEncode False (T.encodeUtf8 (username <> "/" <> projectName)))
+    )
+    "&statistics=true"
 
 -- | returns 'True' if a project has multiple committers, according to
 -- the email addresses of the commits.
@@ -94,28 +96,34 @@ multipleCommitters project = do
   return (length (nub emailAddresses) > 1)
 
 -- | gets the email addresses in the author information in all commit
--- for a project. 
+-- for a project.
 commitsEmailAddresses ::
-     (MonadUnliftIO m, MonadIO m) => Project -> GitLab m [Text]
-commitsEmailAddresses = commitsEmailAddresses' . project_id
+  (MonadUnliftIO m, MonadIO m) => Project -> GitLab m [Text]
+commitsEmailAddresses project = do
+  result <- commitsEmailAddresses' (project_id project)
+  return (fromRight (error "commitsEmailAddresses error") result)
 
 -- | gets the email addresses in the author information in all commit
--- for a project defined by the project's ID. 
-commitsEmailAddresses' :: (MonadUnliftIO m, MonadIO m) => Int -> GitLab m [Text]
+-- for a project defined by the project's ID.
+commitsEmailAddresses' :: (MonadUnliftIO m, MonadIO m) => Int -> GitLab m (Either Status [Text])
 commitsEmailAddresses' projectId = do
-  (commits :: [Commit]) <- projectCommits' projectId
-  return (map author_email commits)
+  -- (commits :: [Commit]) <- projectCommits' projectId
+  attempt <- projectCommits' projectId
+  case attempt of
+    Left httpStatus -> return (Left httpStatus)
+    Right (commits :: [Commit]) ->
+      return (Right (map author_email commits))
 
 -- | gets all projects for a user given their username.
 --
 -- > userProjects "harry"
 userProjects' ::
-     (MonadUnliftIO m, MonadIO m) => Text -> GitLab m (Maybe [Project])
+  (MonadUnliftIO m, MonadIO m) => Text -> GitLab m (Maybe [Project])
 userProjects' username = do
   userMaybe <- searchUser username
   case userMaybe of
     Nothing -> return Nothing
-    Just usr -> Just <$> gitlab (urlPath (user_id usr))
+    Just usr -> Just <$> gitlabUnsafe (urlPath (user_id usr))
   where
     urlPath userId = "/users/" <> T.pack (show userId) <> "/projects"
 
@@ -123,14 +131,16 @@ userProjects' username = do
 --
 -- > userProjects myUser
 userProjects ::
-     (MonadUnliftIO m, MonadIO m) => User -> GitLab m (Maybe [Project])
-userProjects theUser = userProjects' (user_username theUser)
+  (MonadUnliftIO m, MonadIO m) => User -> GitLab m (Maybe [Project])
+userProjects theUser =
+  userProjects' (user_username theUser)
 
 -- | gets the 'GitLab.Types.Project' against which the given 'Issue'
 -- was created.
 projectOfIssue :: (MonadIO m) => Issue -> GitLab m Project
-projectOfIssue issue =
-  fromJust <$> searchProjectId (issue_project_id issue)
+projectOfIssue issue = do
+  result <- searchProjectId (issue_project_id issue)
+  return (fromJust (fromRight (error "projectOfIssue error") result))
 
 -- | finds all issues created by a user.
 --
@@ -139,7 +149,7 @@ projectOfIssue issue =
 -- returns a (user,projects) tuple, where 'user' is the 'User' found
 -- for the given searched username, and a list of 'Project's that the
 -- user has created issues for.
-issuesCreatedByUser :: (MonadUnliftIO m, MonadIO m) => Text -> GitLab m (Maybe (User,[Project]))
+issuesCreatedByUser :: (MonadUnliftIO m, MonadIO m) => Text -> GitLab m (Maybe (User, [Project]))
 issuesCreatedByUser username = do
   user_maybe <- searchUser username
   case user_maybe of
@@ -153,17 +163,18 @@ issuesCreatedByUser username = do
 -- of triples of: 1) the found project, 2) the list of issues for the
 -- found projects, and 3) a list of users who've created issues.
 issuesOnForks ::
-     (MonadUnliftIO m, MonadIO m)
-  => Text -- ^ name or namespace of the project
-  -> GitLab m [(Project, [Issue], [User])]
+  (MonadUnliftIO m, MonadIO m) =>
+  -- | name or namespace of the project
+  Text ->
+  GitLab m [(Project, [Issue], [User])]
 issuesOnForks projectName = do
   projects <- projectsWithName projectName
   mapM processProject projects
   where
     processProject ::
-         (MonadUnliftIO m, MonadIO m)
-      => Project
-      -> GitLab m (Project, [Issue], [User])
+      (MonadUnliftIO m, MonadIO m) =>
+      Project ->
+      GitLab m (Project, [Issue], [User])
     processProject proj = do
       (openIssues :: [Issue]) <- projectOpenedIssues proj
       let authors = map issue_author openIssues
@@ -173,7 +184,7 @@ issuesOnForks projectName = do
 -- where namespace is the namespace of the project
 -- e.g. "user1/project1", and members is a list of (username,name)
 -- tuples about all members of the project.
-projectMemebersCount :: (MonadIO m) => Project -> GitLab m (Text,[(Text,Text)])
+projectMemebersCount :: (MonadIO m) => Project -> GitLab m (Text, [(Text, Text)])
 projectMemebersCount project = do
   friends <- count
   return (namespace_name (namespace project), friends)
@@ -181,26 +192,29 @@ projectMemebersCount project = do
     count = do
       let addr =
             "/projects/" <> T.pack (show (project_id project)) <> "/members/all"
-      (res :: [Member]) <- gitlab addr
+      (res :: [Member]) <- gitlabUnsafe addr
       return (map (\x -> (member_username x, member_name x)) res)
 
 -- | returns 'True' is the last commit for a project passes all
 -- continuous integration tests.
 projectCISuccess ::
-     (MonadIO m)
-  => Project -- ^ the name or namespace of the project
-  -> GitLab m Bool
+  (MonadIO m) =>
+  -- | the name or namespace of the project
+  Project ->
+  GitLab m Bool
 projectCISuccess project = do
   pipes <- pipelines project
   case pipes of
     [] -> return False
-    (x:_) -> return (pipeline_status x == "success")
+    (x : _) -> return (pipeline_status x == "success")
 
 -- | searches for a username, and returns a user ID for that user, or
--- 'Nothing' if a user cannot be found. 
-namespacePathToUserId :: (MonadIO m)
-  => Text -- ^ name or namespace of project 
-  -> GitLab m (Maybe Int)
+-- 'Nothing' if a user cannot be found.
+namespacePathToUserId ::
+  (MonadIO m) =>
+  -- | name or namespace of project
+  Text ->
+  GitLab m (Maybe Int)
 namespacePathToUserId namespacePath = do
   user_maybe <- searchUser namespacePath
   case user_maybe of
@@ -208,37 +222,42 @@ namespacePathToUserId namespacePath = do
     Just usr -> return (Just (user_id usr))
 
 -- | gets all diffs in a project for a given commit SHA.
-projectDiffs :: (MonadIO m) => Project -> Text -> GitLab m [Diff]
+projectDiffs :: (MonadIO m) => Project -> Text -> GitLab m (Either Status [Diff])
 projectDiffs proj =
   projectDiffs' (project_id proj)
 
 -- | gets all diffs in a project for a given project ID, for a given
 -- commit SHA.
-projectDiffs' :: (MonadIO m) => Int -> Text -> GitLab m [Diff]
+projectDiffs' :: (MonadIO m) => Int -> Text -> GitLab m (Either Status [Diff])
 projectDiffs' projId commitSha =
   gitlab
-  ("/projects/"
-   <> T.pack (show projId)
-   <> "/repository/commits/"
-   <> commitSha
-   <> "/diff/")
+    ( "/projects/"
+        <> T.pack (show projId)
+        <> "/repository/commits/"
+        <> commitSha
+        <> "/diff/"
+    )
 
 -- | share a project with a group.
 shareProjectWithGroup ::
-     (MonadIO m)
-  => Int -- ^ group ID
-  -> Int -- ^ project ID
-  -> AccessLevel -- ^ level of access granted
-  -> GitLab m (Either Status GroupShare)
+  (MonadIO m) =>
+  -- | group ID
+  Int ->
+  -- | project ID
+  Int ->
+  -- | level of access granted
+  AccessLevel ->
+  GitLab m (Either Status GroupShare)
 shareProjectWithGroup groupId projectId access =
   gitlabPost addr dataBody
   where
     dataBody :: Text
     dataBody =
       "group_id="
-      <> T.pack (show groupId)
-      <> "&group_access="
-      <> T.pack (show access)
-    addr = "/projects/"
-           <> T.pack (show projectId)
-           <> "/share"
+        <> T.pack (show groupId)
+        <> "&group_access="
+        <> T.pack (show access)
+    addr =
+      "/projects/"
+        <> T.pack (show projectId)
+        <> "/share"
