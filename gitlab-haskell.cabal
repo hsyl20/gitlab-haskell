@@ -21,7 +21,7 @@ description:
             >          , token="my_token"} )
             >      (searchUser "joe" >>= userProjects . fromJust)
             .
-            Which uses the `todos` function:
+            Which uses the functions:
             .
             > searchUser   :: Text -> GitLab m (Maybe User)
             > userProjects :: User -> GitLab m (Maybe [Project])

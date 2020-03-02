@@ -38,13 +38,10 @@ For example:
            , token="my_token"} )
         (searchUser "joe" >>= userProjects . fromJust)
 
-Which uses the` function:
+Which uses the functions:
 
     searchUser   :: Text -> GitLab m (Maybe User)
     userProjects :: User -> GitLab m (Maybe [Project])
-
-This returns all GitLab TODO items, as Haskell values of type `Todo`
-for the user identified with the access token`my_token`.
 
 The `gitlab-tools` command line tool for bulk GitLab transactions uses
 this library [link](https://gitlab.com/robstewart57/gitlab-tools).
