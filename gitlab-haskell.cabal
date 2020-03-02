@@ -19,11 +19,12 @@ description:
             >      (defaultGitLabServer
             >          { url = "https://gitlab.example.com"
             >          , token="my_token"} )
-            >      todos
+            >      (searchUser "joe" >>= userProjects . fromJust)
             .
             Which uses the `todos` function:
             .
-            > todos :: MonadIO m => GitLab m [Todo] 
+            > searchUser   :: Text -> GitLab m (Maybe User)
+            > userProjects :: User -> GitLab m (Maybe [Project])
             .
             Unsurprisingly, this library is maintained on GitLab: <https://gitlab.com/robstewart57/gitlab-haskell>
 
