@@ -31,15 +31,17 @@ Run all GitLab actions with `runGitLab`:
 
 For example:
 
-    myTodos <- runGitLab
-                 (defaultGitLabServer
-                   { url = "https://gitlab.example.com"
-                   , token="my_token"} )
-                 todos
+    myProjects <-
+      runGitLab
+        (defaultGitLabServer
+           { url = "https://gitlab.example.com"
+           , token="my_token"} )
+        (searchUser "joe" >>= userProjects . fromJust)
 
-Which uses the `todos` function:
+Which uses the` function:
 
-    todos :: MonadIO m => GitLab m [Todo] 
+    searchUser   :: Text -> GitLab m (Maybe User)
+    userProjects :: User -> GitLab m (Maybe [Project])
 
 This returns all GitLab TODO items, as Haskell values of type `Todo`
 for the user identified with the access token`my_token`.
