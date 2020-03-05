@@ -53,7 +53,7 @@ getFileArchive ::
   ArchiveFormat ->
   -- | file path to store the archive
   FilePath ->
-  GitLab m ()
+  GitLab m (Either Status ())
 getFileArchive project = getFileArchive' (project_id project)
 
 -- | get a file archive of the repository files as a
@@ -81,13 +81,13 @@ getFileArchive' ::
   ArchiveFormat ->
   -- | file path to store the archive
   FilePath ->
-  GitLab m ()
+  GitLab m (Either Status ())
 getFileArchive' projectId format path = do
   attempt <- getFileArchiveBS' projectId format
   case attempt of
-    Left _status -> return ()
+    Left st -> return (Left st)
     Right archiveData ->
-      liftIO $ BSL.writeFile path archiveData
+      Right <$> liftIO (BSL.writeFile path archiveData)
 
 -- | get a file archive of the repository files as a 'BSL.ByteString'
 --   using the project's ID. For example:
@@ -100,7 +100,7 @@ getFileArchiveBS' ::
   -- | file format
   ArchiveFormat ->
   GitLab m (Either Status BSL.ByteString)
-getFileArchiveBS' projectId format = do
+getFileArchiveBS' projectId format =
   gitlabReqByteString addr
   where
     addr =
