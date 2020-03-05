@@ -159,11 +159,10 @@ gitlabReqOne parser urlPath attrs = go
       if successStatus (responseStatus resp)
         then return (Right (parser (responseBody resp)))
         else return (Left (responseStatus resp))
-      where
 
 gitlabReqJsonOne :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Either Status (Maybe a))
-gitlabReqJsonOne gitlabURL attr = do
-  gitlabReqOne parseBSOne gitlabURL attr
+gitlabReqJsonOne =
+  gitlabReqOne parseBSOne
 
 gitlabReqText :: (MonadIO m) => Text -> GitLab m (Either Status String)
 gitlabReqText urlPath = gitlabReqOne C.unpack urlPath ""
@@ -175,7 +174,7 @@ gitlab :: (MonadIO m, FromJSON a) => Text -> GitLab m (Either Status [a])
 gitlab addr = gitlabReqJsonMany addr ""
 
 gitlabUnsafe :: (MonadIO m, FromJSON a) => Text -> GitLab m [a]
-gitlabUnsafe addr = do
+gitlabUnsafe addr =
   fromRight (error "gitlabUnsafe error") <$> gitlab addr
 
 gitlabOne :: (MonadIO m, FromJSON a) => Text -> GitLab m (Either Status (Maybe a))

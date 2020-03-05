@@ -88,7 +88,7 @@ addUserToGroup' groupName access userId = do
   case attempt of
     Left httpStatus -> return (Left httpStatus)
     Right [] -> return (Left (mkStatus 404 (C.pack "cannot find group")))
-    Right [grp] -> do
+    Right [grp] ->
       gitlabPost addr dataBody
       where
         dataBody :: Text
