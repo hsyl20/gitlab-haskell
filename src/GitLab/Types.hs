@@ -144,7 +144,7 @@ data Namespace
         namespace_path :: Text,
         kind :: Text,
         full_path :: Text,
-        parent_id :: Maybe Text
+        parent_id :: Maybe Int
       }
   deriving (Generic, Show)
 
@@ -353,7 +353,7 @@ data Commit
         committed_date :: Text,
         commit_created_at :: Text,
         message :: Text,
-        parent_ids :: Maybe [Text],
+        parent_ids :: Maybe [Int],
         last_pipeline :: Maybe Pipeline,
         commit_stats :: Maybe CommitStats,
         commit_status :: Maybe Text
@@ -366,7 +366,7 @@ data CommitTodo
       { todo_commit_id :: Text,
         todo_commit_short_id :: Text,
         todo_commit_created_at :: Text,
-        todo_parent_ids :: Maybe [Text]
+        todo_parent_ids :: Maybe [Int]
       }
   deriving (Generic, Show)
 
