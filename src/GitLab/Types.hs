@@ -353,7 +353,7 @@ data Commit
         committed_date :: Text,
         commit_created_at :: Text,
         message :: Text,
-        parent_ids :: Maybe [Int],
+        commit_parent_ids :: Maybe [String],
         last_pipeline :: Maybe Pipeline,
         commit_stats :: Maybe CommitStats,
         commit_status :: Maybe Text
@@ -366,7 +366,7 @@ data CommitTodo
       { todo_commit_id :: Text,
         todo_commit_short_id :: Text,
         todo_commit_created_at :: Text,
-        todo_parent_ids :: Maybe [Int]
+        todo_parent_ids :: Maybe [String]
       }
   deriving (Generic, Show)
 
@@ -653,6 +653,7 @@ bodyNoPrefix :: String -> String
 bodyNoPrefix "commit_created_at" = "created_at"
 bodyNoPrefix "commit_id" = "id"
 bodyNoPrefix "commit_status" = "status"
+bodyNoPrefix "commit_parent_ids" = "parent_ids"
 bodyNoPrefix "todo_commit_id" = "id"
 bodyNoPrefix "todo_commit_short_id" = "short_id"
 bodyNoPrefix "todo_commit_created_at" = "created_at"
