@@ -34,13 +34,13 @@ instance Show AccessLevel where
   show Owner = "50"
 
 -- | the members of a project.
-membersOfProject :: (MonadIO m) => Project -> GitLab m [Member]
+membersOfProject :: Project -> GitLab [Member]
 membersOfProject p = do
   result <- membersOfProject' (project_id p)
   return (fromRight (error "membersOfProject error") result)
 
 -- | the members of a project given its ID.
-membersOfProject' :: (MonadIO m) => Int -> GitLab m (Either Status [Member])
+membersOfProject' :: Int -> GitLab (Either Status [Member])
 membersOfProject' projectId =
   gitlab addr
   where
@@ -51,14 +51,13 @@ membersOfProject' projectId =
 -- 'Right Member' for each successful action, otherwise it returns
 -- 'Left Status'.
 addMemberToProject ::
-  (MonadIO m) =>
   -- | the project
   Project ->
   -- | level of access
   AccessLevel ->
   -- | the user
   User ->
-  GitLab m (Either Status Member)
+  GitLab (Either Status Member)
 addMemberToProject project access usr =
   addMemberToProject' (project_id project) access (user_id usr)
 
@@ -66,14 +65,13 @@ addMemberToProject project access usr =
 -- project's ID and the user's ID. Returns @Right Member@ for each
 -- successful action, otherwise it returns @Left Status@.
 addMemberToProject' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | level of access
   AccessLevel ->
   -- | user ID
   Int ->
-  GitLab m (Either Status Member)
+  GitLab (Either Status Member)
 addMemberToProject' projectId access userId =
   gitlabPost addr dataBody
   where
@@ -87,14 +85,13 @@ addMemberToProject' projectId access userId =
 -- level. Returns 'Right Member' for each successful action, otherwise
 -- it returns 'Left Status'.
 addMembersToProject ::
-  (MonadIO m) =>
   -- | the project
   Project ->
   -- | level of access
   AccessLevel ->
   -- | users to add to the project
   [User] ->
-  GitLab m [Either Status Member]
+  GitLab [Either Status Member]
 addMembersToProject project access =
   mapM (addMemberToProject project access)
 
@@ -102,13 +99,12 @@ addMembersToProject project access =
 -- given the project's ID and the user IDs. Returns @Right Member@ for
 -- each successful action, otherwise it returns @Left Status@.
 addMembersToProject' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | level of acces
   AccessLevel ->
   -- | IDs of users to add to the project
   [Int] ->
-  GitLab m [Either Status Member]
+  GitLab [Either Status Member]
 addMembersToProject' projectId access =
   mapM (addMemberToProject' projectId access)

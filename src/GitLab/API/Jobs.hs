@@ -18,20 +18,18 @@ import Network.HTTP.Types.Status
 
 -- | returns all jobs ran on a project.
 jobs ::
-  (MonadIO m) =>
   -- | the project
   Project ->
-  GitLab m [Job]
+  GitLab [Job]
 jobs project = do
   result <- jobs' (project_id project)
   return (fromRight (error "jobs error") result)
 
 -- | returns all jobs ran on a project given its project ID.
 jobs' ::
-  (MonadIO m) =>
   -- | the project ID
   Int ->
-  GitLab m (Either Status [Job])
+  GitLab (Either Status [Job])
 jobs' projectId =
   gitlab addr
   where

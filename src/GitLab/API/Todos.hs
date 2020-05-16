@@ -14,5 +14,5 @@ import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
 
 -- | returns all pending todos for the user, as defined by the access token.
-todos :: (MonadIO m) => GitLab m [Todo]
+todos :: GitLab [Todo]
 todos = gitlabUnsafe "/todos"

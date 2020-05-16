@@ -18,7 +18,7 @@ import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
 
 -- | all registered users.
-allUsers :: (MonadIO m) => GitLab m [User]
+allUsers :: GitLab [User]
 allUsers = do
   let path = "/users"
   gitlabUnsafe path
@@ -26,10 +26,9 @@ allUsers = do
 -- | searches for a user given a username. Returns @Just User@ if the
 -- user is found, otherwise @Nothing@.
 searchUser ::
-  (MonadIO m) =>
   -- | username to search for
   Text ->
-  GitLab m (Maybe User)
+  GitLab (Maybe User)
 searchUser username = do
   let path = "/users"
       attrs = "&username=" <> username
@@ -41,10 +40,9 @@ searchUser username = do
 -- | searches for users given a list of usernames, returns them in
 -- alphabetical order of their usernames.
 orderedUsers ::
-  (MonadIO m) =>
   -- | usernames to search for
   [Text] ->
-  GitLab m [User]
+  GitLab [User]
 orderedUsers usernames = do
   users <- catMaybes <$> mapM searchUser usernames
   return (orderUsersByName users)

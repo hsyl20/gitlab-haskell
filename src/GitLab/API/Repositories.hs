@@ -19,20 +19,18 @@ import Network.HTTP.Types.Status
 
 -- | returns a list of repository files and directories in a project.
 repositories ::
-  (MonadIO m) =>
   -- | the project
   Project ->
-  GitLab m [Repository]
+  GitLab [Repository]
 repositories project =
   fromRight (error "repositories error") <$> repositories' (project_id project)
 
 -- | returns a list of repository files and directories in a project
 -- given its project ID.
 repositories' ::
-  (MonadIO m) =>
   -- | the project ID
   Int ->
-  GitLab m (Either Status [Repository])
+  GitLab (Either Status [Repository])
 repositories' projectId =
   gitlab addr
   where
@@ -46,14 +44,13 @@ repositories' projectId =
 --
 -- > getFileArchive myProject TarGz "/tmp/myProject.tar.gz"
 getFileArchive ::
-  (MonadIO m) =>
   -- | project
   Project ->
   -- | file format
   ArchiveFormat ->
   -- | file path to store the archive
   FilePath ->
-  GitLab m (Either Status ())
+  GitLab (Either Status ())
 getFileArchive project = getFileArchive' (project_id project)
 
 -- | get a file archive of the repository files as a
@@ -61,12 +58,11 @@ getFileArchive project = getFileArchive' (project_id project)
 --
 -- > getFileArchiveBS myProject TarGz "/tmp/myProject.tar.gz"
 getFileArchiveBS ::
-  (MonadIO m) =>
   -- | project
   Project ->
   -- | file format
   ArchiveFormat ->
-  GitLab m (Either Status BSL.ByteString)
+  GitLab (Either Status BSL.ByteString)
 getFileArchiveBS project = getFileArchiveBS' (project_id project)
 
 -- | get a file archive of the repository files using the project's
@@ -74,14 +70,13 @@ getFileArchiveBS project = getFileArchiveBS' (project_id project)
 --
 -- > getFileArchive' 3453 Zip "/tmp/myProject.zip"
 getFileArchive' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | file format
   ArchiveFormat ->
   -- | file path to store the archive
   FilePath ->
-  GitLab m (Either Status ())
+  GitLab (Either Status ())
 getFileArchive' projectId format path = do
   attempt <- getFileArchiveBS' projectId format
   case attempt of
@@ -94,12 +89,11 @@ getFileArchive' projectId format path = do
 --
 -- > getFileArchiveBS' 3453 Zip "/tmp/myProject.zip"
 getFileArchiveBS' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | file format
   ArchiveFormat ->
-  GitLab m (Either Status BSL.ByteString)
+  GitLab (Either Status BSL.ByteString)
 getFileArchiveBS' projectId format =
   gitlabReqByteString addr
   where

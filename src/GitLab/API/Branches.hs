@@ -18,14 +18,14 @@ import Network.HTTP.Types.Status
 
 -- | Get a list of repository branches from a project, sorted by name
 -- alphabetically.
-branches :: (MonadIO m) => Project -> GitLab m [Branch]
+branches :: Project -> GitLab [Branch]
 branches project = do
   result <- branches' (project_id project)
   return (fromRight (error "branches error") result)
 
 -- | Get a list of repository branches from a project given its
 -- project ID, sorted by name alphabetically.
-branches' :: (MonadIO m) => Int -> GitLab m (Either Status [Branch])
+branches' :: Int -> GitLab (Either Status [Branch])
 branches' projectId =
   gitlab addr
   where

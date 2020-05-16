@@ -14,7 +14,7 @@ import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
 import Network.HTTP.Types.Status
 
-gitlabVersion :: (MonadIO m) => GitLab m (Either Status (Maybe Version))
+gitlabVersion :: GitLab (Either Status (Maybe Version))
 gitlabVersion = do
   let path = "/version"
   gitlabOne path

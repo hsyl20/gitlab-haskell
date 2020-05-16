@@ -20,27 +20,25 @@ import Network.HTTP.Types.URI
 
 -- | Get a list of repository files and directories in a project.
 repositoryFiles ::
-  (MonadIO m) =>
   -- | the project
   Project ->
   -- | the file path
   Text ->
   -- | name of the branch, tag or commit
   Text ->
-  GitLab m (Either Status (Maybe RepositoryFile))
+  GitLab (Either Status (Maybe RepositoryFile))
 repositoryFiles project = repositoryFiles' (project_id project)
 
 -- | Get a list of repository files and directories in a project given
 -- the project's ID.
 repositoryFiles' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | the file path
   Text ->
   -- | name of the branch, tag or commit
   Text ->
-  GitLab m (Either Status (Maybe RepositoryFile))
+  GitLab (Either Status (Maybe RepositoryFile))
 repositoryFiles' projectId filePath reference =
   gitlabWithAttrsOne addr ("&ref=" <> reference)
   where
@@ -54,12 +52,11 @@ repositoryFiles' projectId filePath reference =
 
 -- | Get raw data for a given file blob hash.
 repositoryFileBlob ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | blob SHA
   Text ->
-  GitLab m (Either Status String)
+  GitLab (Either Status String)
 repositoryFileBlob projectId blobSha =
   gitlabReqText addr
   where

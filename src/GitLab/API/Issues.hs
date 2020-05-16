@@ -23,20 +23,18 @@ import qualified Data.Text.Lazy
 
 -- | returns all issues against a project.
 projectOpenedIssues ::
-  (MonadIO m, MonadUnliftIO m) =>
   -- | the project
   Project ->
-  GitLab m [Issue]
+  GitLab [Issue]
 projectOpenedIssues p = do
   result <- projectOpenedIssues' (project_id p)
   return (fromRight (error "projectOpenedIssues error") result)
 
 -- | returns all issues against a project given its project ID.
 projectOpenedIssues' ::
-  (MonadIO m, MonadUnliftIO m) =>
   -- | the project ID
   Int ->
-  GitLab m (Either Status [Issue])
+  GitLab (Either Status [Issue])
 projectOpenedIssues' projectId = do
   let path = "/projects/" <> T.pack (show projectId) <> "/issues"
   gitlab path
@@ -45,10 +43,9 @@ projectOpenedIssues' projectId = do
 
 -- | gets all issues create by a user.
 userIssues ::
-  (MonadIO m) =>
   -- | the user
   User ->
-  GitLab m [Issue]
+  GitLab [Issue]
 userIssues usr =
   gitlabWithAttrsUnsafe addr attrs
   where

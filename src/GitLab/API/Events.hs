@@ -11,7 +11,7 @@ import qualified Data.Text as T
 import GitLab.Types
 
 -- | Get a list of events.
-issueEvents :: (MonadIO m) => GitLab m [Issue]
+issueEvents :: (MonadIO m) => GitLab [Issue]
 issueEvents = undefined
   -- gitlabWithAttrs addr attrs
   -- where

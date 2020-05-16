@@ -18,20 +18,18 @@ import Network.HTTP.Types.Status
 
 -- | returns the pipelines for a project.
 pipelines ::
-  (MonadIO m) =>
   -- | the project
   Project ->
-  GitLab m [Pipeline]
+  GitLab [Pipeline]
 pipelines p = do
   result <- pipelines' (project_id p)
   return (fromRight (error "pipelines error") result)
 
 -- | returns the pipelines for a project given its project ID.
 pipelines' ::
-  (MonadIO m) =>
   -- | the project ID
   Int ->
-  GitLab m (Either Status [Pipeline])
+  GitLab (Either Status [Pipeline])
 pipelines' projectId =
   gitlabWithAttrs
     addr

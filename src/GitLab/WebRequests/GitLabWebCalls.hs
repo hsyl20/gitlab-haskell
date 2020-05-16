@@ -8,6 +8,7 @@ module GitLab.WebRequests.GitLabWebCalls
     gitlabWithAttrs,
     gitlabWithAttrsUnsafe,
     gitlabOne,
+    -- gitlabOneIO,
     gitlabWithAttrsOne,
     -- not currently used.
     -- gitlabWithAttrsOneUnsafe,
@@ -42,12 +43,12 @@ instance Exception.Exception GitLabException
 -- error code responses, e.g. 404, 409.
 
 gitlabPost ::
-  (MonadIO m, FromJSON b) =>
+  (FromJSON b) =>
   -- | the URL to post to
   Text ->
   -- | the data to post
   Text ->
-  GitLab m (Either Status b)
+  GitLab (Either Status b)
 gitlabPost urlPath dataBody = do
   cfg <- serverCfg <$> ask
   manager <- httpManager <$> ask
@@ -134,7 +135,7 @@ parseBSMany bs =
     Left s -> Exception.throwIO $ GitLabException s
     Right xs -> return xs
 
-gitlabReqJsonMany :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Either Status [a])
+gitlabReqJsonMany :: (FromJSON a) => Text -> Text -> GitLab (Either Status [a])
 gitlabReqJsonMany urlPath attrs =
   go 1 []
   where
@@ -167,7 +168,30 @@ gitlabReqJsonMany urlPath attrs =
             else go (i + 1) accum'
         else return (Left (responseStatus resp))
 
-gitlabReqOne :: (MonadIO m) => (BSL.ByteString -> output) -> Text -> Text -> GitLab m (Either Status output)
+gitlabReqOneIO :: Manager -> GitLabServerConfig -> (BSL.ByteString -> output) -> Text -> Text -> IO (Either Status output)
+gitlabReqOneIO manager cfg parser urlPath attrs = go
+  where
+    go = do
+      let url' =
+            url cfg
+              <> "/api/v4"
+              <> urlPath
+              <> "?per_page=100"
+              <> "&page=1"
+              <> attrs
+      let request' = parseRequest_ (T.unpack url')
+          request =
+            request'
+              { requestHeaders =
+                  [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))],
+                responseTimeout = responseTimeoutMicro (timeout cfg)
+              }
+      resp <- tryGitLab 0 request (retries cfg) manager Nothing
+      if successStatus (responseStatus resp)
+        then return (Right (parser (responseBody resp)))
+        else return (Left (responseStatus resp))
+
+gitlabReqOne :: (BSL.ByteString -> output) -> Text -> Text -> GitLab (Either Status output)
 gitlabReqOne parser urlPath attrs = go
   where
     go = do
@@ -192,38 +216,45 @@ gitlabReqOne parser urlPath attrs = go
         then return (Right (parser (responseBody resp)))
         else return (Left (responseStatus resp))
 
-gitlabReqJsonOne :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Either Status (Maybe a))
+gitlabReqJsonOneIO :: (FromJSON a) => Manager -> GitLabServerConfig -> Text -> Text -> IO (Either Status (Maybe a))
+gitlabReqJsonOneIO mgr cfg urlPath attrs =
+  gitlabReqOneIO mgr cfg parseBSOne urlPath attrs
+
+gitlabReqJsonOne :: (FromJSON a) => Text -> Text -> GitLab (Either Status (Maybe a))
 gitlabReqJsonOne =
   gitlabReqOne parseBSOne
 
-gitlabReqText :: (MonadIO m) => Text -> GitLab m (Either Status String)
+gitlabReqText :: Text -> GitLab (Either Status String)
 gitlabReqText urlPath = gitlabReqOne C.unpack urlPath ""
 
-gitlabReqByteString :: (MonadIO m) => Text -> GitLab m (Either Status BSL.ByteString)
+gitlabReqByteString :: Text -> GitLab (Either Status BSL.ByteString)
 gitlabReqByteString urlPath = gitlabReqOne Prelude.id urlPath ""
 
-gitlab :: (MonadIO m, FromJSON a) => Text -> GitLab m (Either Status [a])
+gitlab :: FromJSON a => Text -> GitLab (Either Status [a])
 gitlab addr = gitlabReqJsonMany addr ""
 
-gitlabUnsafe :: (MonadIO m, FromJSON a) => Text -> GitLab m [a]
+gitlabUnsafe :: (FromJSON a) => Text -> GitLab [a]
 gitlabUnsafe addr =
   fromRight (error "gitlabUnsafe error") <$> gitlab addr
 
-gitlabOne :: (MonadIO m, FromJSON a) => Text -> GitLab m (Either Status (Maybe a))
+gitlabOneIO :: (FromJSON a) => Manager -> GitLabServerConfig -> Text -> IO (Either Status (Maybe a))
+gitlabOneIO mgr cfg addr = gitlabReqJsonOneIO mgr cfg addr ""
+
+gitlabOne :: (FromJSON a) => Text -> GitLab (Either Status (Maybe a))
 gitlabOne addr = gitlabReqJsonOne addr ""
 
-gitlabWithAttrs :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Either Status [a])
+gitlabWithAttrs :: (FromJSON a) => Text -> Text -> GitLab (Either Status [a])
 gitlabWithAttrs = gitlabReqJsonMany
 
-gitlabWithAttrsUnsafe :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m [a]
+gitlabWithAttrsUnsafe :: (FromJSON a) => Text -> Text -> GitLab [a]
 gitlabWithAttrsUnsafe gitlabURL attrs =
   fromRight (error "gitlabWithAttrsUnsafe error") <$> gitlabReqJsonMany gitlabURL attrs
 
-gitlabWithAttrsOne :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Either Status (Maybe a))
+gitlabWithAttrsOne :: (FromJSON a) => Text -> Text -> GitLab (Either Status (Maybe a))
 gitlabWithAttrsOne = gitlabReqJsonOne
 
 -- not currently used.
--- gitlabWithAttrsOneUnsafe :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab m (Maybe a)
+-- gitlabWithAttrsOneUnsafe :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab (Maybe a)
 -- gitlabWithAttrsOneUnsafe gitlabURL attrs =
 --   fromRight (error "gitlabWithAttrsUnsafe error") <$> gitlabReqJsonOne gitlabURL attrs
 

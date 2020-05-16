@@ -62,7 +62,7 @@ import GHC.Generics
 import Network.HTTP.Conduit
 
 -- | type synonym for all GitLab actions.
-type GitLab m a = ReaderT GitLabState m a
+type GitLab a = ReaderT GitLabState IO a
 
 -- | state used by GitLab actions, used internally.
 data GitLabState
@@ -193,7 +193,7 @@ data Project
         project_name :: Text,
         name_with_namespace :: Text,
         project_path :: Text,
-        path_with_namespace :: Text,
+        project_path_with_namespace :: Text,
         project_created_at :: Text,
         default_branch :: Maybe Text,
         tag_list :: [Text], -- check
@@ -417,24 +417,24 @@ data Repository
 -- | jobs.
 data Job
   = Job
-      { commit :: Commit,
-        coverage :: Maybe Text, -- ?
-        created_at :: Text,
-        started_at :: Text,
-        finished_at :: Text,
-        duration :: Double,
-        artifacts_expire_at :: Maybe Text,
-        id :: Int,
-        name :: Text,
-        pipeline :: Pipeline,
+      { job_commit :: Commit,
+        job_coverage :: Maybe Text, -- ?
+        job_created_at :: Text,
+        job_started_at :: Text,
+        job_finished_at :: Text,
+        job_duration :: Double,
+        job_artifacts_expire_at :: Maybe Text,
+        job_id :: Int,
+        job_name :: Text,
+        job_pipeline :: Pipeline,
         job_ref :: Text,
-        artifacts :: [Artifact],
+        job_artifacts :: [Artifact],
         -- , runner :: Maybe Text
-        stage :: Text,
-        status :: Text,
-        tag :: Bool,
+        job_stage :: Text,
+        job_status :: Text,
+        job_tag :: Bool,
         job_web_url :: Text,
-        user :: User
+        job_user :: User
       }
   deriving (Generic, Show)
 
@@ -723,6 +723,7 @@ bodyNoPrefix "project_created_at" = "created_at"
 bodyNoPrefix "project_id" = "id"
 bodyNoPrefix "project_name" = "name"
 bodyNoPrefix "project_path" = "path"
+bodyNoPrefix "project_path_with_namespace" = "path_with_namespace"
 bodyNoPrefix "project_web_url" = "web_url"
 bodyNoPrefix "repository_id" = "id"
 bodyNoPrefix "repository_name" = "name"
@@ -809,6 +810,23 @@ bodyNoPrefix "group_full_name" = "full_name"
 bodyNoPrefix "group_full_path" = "full_path"
 bodyNoPrefix "group_file_template_project_id" = "file_template_project_id"
 bodyNoPrefix "group_parent_id" = "parent_id"
+bodyNoPrefix "job_commit" = "commit"
+bodyNoPrefix "job_coverage" = "job_coverage"
+bodyNoPrefix "job_created_at" = "job_created_at"
+bodyNoPrefix "job_started_at" = "job_started_at"
+bodyNoPrefix "job_finished_at" = "job_finished_at"
+bodyNoPrefix "job_duration" = "job_duration"
+bodyNoPrefix "job_artifacts_expire_at" = "job_artifacts_expire_at"
+bodyNoPrefix "job_id" = "job_id"
+bodyNoPrefix "job_name" = "job_name"
+bodyNoPrefix "job_pipeline" = "job_pipeline"
+bodyNoPrefix "job_ref" = "job_ref"
+bodyNoPrefix "job_artifacts" = "job_artifacts"
+bodyNoPrefix "job_stage" = "job_stage"
+bodyNoPrefix "job_status" = "job_status"
+bodyNoPrefix "job_tag" = "job_tag"
+bodyNoPrefix "job_web_url" = "job_web_url"
+bodyNoPrefix "job_user" = "job_user"
 -- TODO field names for Issues data type
 bodyNoPrefix s = s
 

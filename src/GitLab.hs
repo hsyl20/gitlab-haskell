@@ -9,6 +9,7 @@
 -- Stability   : stable
 module GitLab
   ( runGitLab,
+    runGitLabDbg,
     runGitLabWithManager,
     module GitLab.Types,
     module GitLab.API.Pipelines,
@@ -29,7 +30,6 @@ module GitLab
 where
 
 import Control.Monad.IO.Class
-import Control.Monad.IO.Unlift
 import Control.Monad.Trans.Reader
 import GitLab.API.Branches
 import GitLab.API.Commits
@@ -61,15 +61,14 @@ import System.IO
 --
 -- > projectsWithIssuesEnabled :: IO [Project]
 -- > projectsWithIssuesEnabled =
--- >   runGitLab myConfig $ filter (issueEnabled . issues_enabled) <$> allProjects
+-- >   runGitLabyConfig $ filter (issueEnabled . issues_enabled) <$> allProjects
 -- >   where
 -- >     myConfig = defaultGitLabServer
 -- >         { url = "https://gitlab.example.com"
 -- >         , token = "my_access_token" }
 -- >     issueEnabled Nothing = False
 -- >     issueEnabled (Just b) = b
-runGitLab ::
-  (MonadUnliftIO m, MonadIO m) => GitLabServerConfig -> GitLab m a -> m a
+runGitLab :: GitLabServerConfig -> GitLab a -> IO a
 runGitLab cfg action = do
   liftIO $ hSetBuffering stdout LineBuffering
   let settings = mkManagerSettings (TLSSettingsSimple True False False) Nothing
@@ -78,8 +77,7 @@ runGitLab cfg action = do
 
 -- | The same as 'runGitLab', except that it also takes a connection
 -- manager as an argument.
-runGitLabWithManager ::
-  (MonadUnliftIO m, MonadIO m) => Manager -> GitLabServerConfig -> GitLab m a -> m a
+runGitLabWithManager :: Manager -> GitLabServerConfig -> GitLab a -> IO a
 runGitLabWithManager manager cfg action = do
   -- test the token access
   tokenTest <- runReaderT gitlabVersion (GitLabState cfg manager)
@@ -89,3 +87,11 @@ runGitLabWithManager manager cfg action = do
     Right _versionInfo ->
       -- it worked, run the user code.
       runReaderT action (GitLabState cfg manager)
+
+-- | Only useful for testing GitLab actions that lift IO actions with
+-- liftIO. Cannot speak to a GitLab server. Only useful for the
+-- gitlab-haskell tests.
+runGitLabDbg :: GitLab a -> IO a
+runGitLabDbg action = do
+  liftIO $ hSetBuffering stdout LineBuffering
+  runReaderT action undefined

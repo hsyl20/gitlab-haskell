@@ -28,10 +28,9 @@ import Network.HTTP.Types.URI
 --
 -- > projectsWithNameOrPath "group1"
 groupsWithNameOrPath ::
-  (MonadUnliftIO m, MonadIO m) =>
   -- | group name being searched for.
   Text ->
-  GitLab m (Either Status [Group])
+  GitLab (Either Status [Group])
 groupsWithNameOrPath groupName = do
   result <- gitlabWithAttrs "/groups" ("&search=" <> groupName)
   case result of
@@ -49,12 +48,11 @@ groupsWithNameOrPath groupName = do
 
 -- | adds all registered users to a group.
 addAllUsersToGroup ::
-  (MonadIO m, MonadUnliftIO m) =>
   -- | group name
   Text ->
   -- | level of access granted
   AccessLevel ->
-  GitLab m [Either Status Member]
+  GitLab [Either Status Member]
 addAllUsersToGroup groupName access = do
   allRegisteredUsers <- allUsers
   let allUserIds = map user_username allRegisteredUsers
@@ -62,27 +60,25 @@ addAllUsersToGroup groupName access = do
 
 -- | adds a user to a group.
 addUserToGroup ::
-  (MonadIO m, MonadUnliftIO m) =>
   -- | group name
   Text ->
   -- | level of access granted
   AccessLevel ->
   -- | the user
   User ->
-  GitLab m (Either Status Member)
+  GitLab (Either Status Member)
 addUserToGroup groupName access usr =
   addUserToGroup' groupName access (user_id usr)
 
 -- | adds a user with a given user ID to a group.
 addUserToGroup' ::
-  (MonadIO m, MonadUnliftIO m) =>
   -- | group name
   Text ->
   -- | level of access granted
   AccessLevel ->
   -- | user ID
   Int ->
-  GitLab m (Either Status Member)
+  GitLab (Either Status Member)
 addUserToGroup' groupName access userId = do
   attempt <- groupsWithNameOrPath groupName
   case attempt of
@@ -104,27 +100,25 @@ addUserToGroup' groupName access userId = do
 
 -- | adds a list of users to a group.
 addUsersToGroup ::
-  (MonadIO m, MonadUnliftIO m) =>
   -- | group name
   Text ->
   -- | level of access granted
   AccessLevel ->
   -- | list of usernames to be added to the group
   [User] ->
-  GitLab m [Either Status Member]
+  GitLab [Either Status Member]
 addUsersToGroup groupName access =
   mapM (addUserToGroup groupName access)
 
 -- | adds a list of users to a group.
 addUsersToGroup' ::
-  (MonadIO m, MonadUnliftIO m) =>
   -- | group name
   Text ->
   -- | level of access granted
   AccessLevel ->
   -- | list of usernames to be added to the group
   [Text] ->
-  GitLab m [Either Status Member]
+  GitLab [Either Status Member]
 addUsersToGroup' groupName access usernames = do
   users <- catMaybes <$> mapM searchUser usernames
   mapM (addUserToGroup' groupName access . user_id) users

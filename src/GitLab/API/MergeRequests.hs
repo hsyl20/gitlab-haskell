@@ -19,20 +19,18 @@ import Network.HTTP.Types.Status
 
 -- | returns the merge requests for a project.
 mergeRequests ::
-  (MonadIO m) =>
   -- | the project
   Project ->
-  GitLab m [MergeRequest]
+  GitLab [MergeRequest]
 mergeRequests p = do
   result <- mergeRequests' (project_id p)
   return (fromRight (error "mergeRequests error") result)
 
 -- | returns the merge requests for a project given its project ID.
 mergeRequests' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
-  GitLab m (Either Status [MergeRequest])
+  GitLab (Either Status [MergeRequest])
 mergeRequests' projectId =
   gitlabWithAttrs addr "&scope=all"
   where
@@ -43,7 +41,6 @@ mergeRequests' projectId =
 
 -- | Creates a merge request.
 createMergeRequest ::
-  (MonadIO m) =>
   -- | project
   Project ->
   -- | source branch
@@ -56,13 +53,12 @@ createMergeRequest ::
   Text ->
   -- | merge request description
   Text ->
-  GitLab m (Either Status MergeRequest)
+  GitLab (Either Status MergeRequest)
 createMergeRequest project =
   createMergeRequest' (project_id project)
 
 -- | Creates a merge request.
 createMergeRequest' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | source branch
@@ -75,7 +71,7 @@ createMergeRequest' ::
   Text ->
   -- | merge request description
   Text ->
-  GitLab m (Either Status MergeRequest)
+  GitLab (Either Status MergeRequest)
 createMergeRequest' projectId sourceBranch targetBranch targetProjectId mrTitle mrDescription =
   gitlabPost addr dataBody
   where
@@ -92,23 +88,21 @@ createMergeRequest' projectId sourceBranch targetBranch targetProjectId mrTitle 
 
 -- | Accepts a merge request.
 acceptMergeRequest ::
-  (MonadIO m) =>
   -- | project
   Project ->
   -- | merge request IID
   Int ->
-  GitLab m (Either Status MergeRequest)
+  GitLab (Either Status MergeRequest)
 acceptMergeRequest project =
   acceptMergeRequest' (project_id project)
 
 -- | Accepts a merge request.
 acceptMergeRequest' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | merge request IID
   Int ->
-  GitLab m (Either Status MergeRequest)
+  GitLab (Either Status MergeRequest)
 acceptMergeRequest' projectId mergeRequestIid = gitlabPost addr dataBody
   where
     dataBody :: Text

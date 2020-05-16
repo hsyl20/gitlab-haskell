@@ -19,20 +19,18 @@ import Network.HTTP.Types.Status
 
 -- | returns all commits for a project.
 projectCommits ::
-  (MonadIO m) =>
   -- | the project
   Project ->
-  GitLab m [Commit]
+  GitLab [Commit]
 projectCommits project = do
   result <- projectCommits' (project_id project)
   return (fromRight (error "projectCommits error") result)
 
 -- | returns all commits for a project given its project ID.
 projectCommits' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
-  GitLab m (Either Status [Commit])
+  GitLab (Either Status [Commit])
 projectCommits' projectId =
   gitlabWithAttrs (commitsAddr projectId) "&with_stats=true"
   where
@@ -43,12 +41,11 @@ projectCommits' projectId =
 -- | returns a commit for the given project and commit hash, if such
 -- a commit exists.
 commitDetails ::
-  (MonadIO m) =>
   -- | the project
   Project ->
   -- | the commit hash
   Text ->
-  GitLab m (Maybe Commit)
+  GitLab (Maybe Commit)
 commitDetails project theHash = do
   result <- commitDetails' (project_id project) theHash
   return (fromRight (error "commitDetails error") result)
@@ -56,12 +53,11 @@ commitDetails project theHash = do
 -- | returns a commit for the given project ID and commit hash, if
 -- such a commit exists.
 commitDetails' ::
-  (MonadIO m) =>
   -- | project ID
   Int ->
   -- | the commit hash
   Text ->
-  GitLab m (Either Status (Maybe Commit))
+  GitLab (Either Status (Maybe Commit))
 commitDetails' projectId hash =
   gitlabOne (commitsAddr projectId)
   where
