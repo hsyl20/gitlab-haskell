@@ -12,6 +12,7 @@ module GitLab.WebRequests.GitLabWebCalls
     -- not currently used.
     -- gitlabWithAttrsOneUnsafe,
     gitlabPost,
+    gitlabPut,
     gitlabReqText,
     gitlabReqByteString,
   )
@@ -68,6 +69,37 @@ gitlabPost urlPath dataBody = do
             Nothing ->
               Left $
                 mkStatus 409 "unable to parse POST response"
+        )
+    else return (Left (responseStatus resp))
+
+gitlabPut ::
+  (MonadIO m, FromJSON b) =>
+  -- | the URL to post to
+  Text ->
+  -- | the data to post
+  Text ->
+  GitLab m (Either Status b)
+gitlabPut urlPath dataBody = do
+  cfg <- serverCfg <$> ask
+  manager <- httpManager <$> ask
+  let url' = url cfg <> "/api/v4" <> urlPath
+  let request' = parseRequest_ (T.unpack url')
+      request =
+        request'
+          { method = "PUT",
+            requestHeaders =
+              [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))],
+            requestBody = RequestBodyBS (T.encodeUtf8 dataBody)
+          }
+  resp <- liftIO $ tryGitLab 0 request (retries cfg) manager Nothing
+  if successStatus (responseStatus resp)
+    then
+      return
+        ( case parseBSOne (responseBody resp) of
+            Just x -> Right x
+            Nothing ->
+              Left $
+                mkStatus 409 "unable to parse PUT response"
         )
     else return (Left (responseStatus resp))
 
