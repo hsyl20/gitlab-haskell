@@ -21,11 +21,13 @@ module GitLab.Types
     Links (..),
     Owner (..),
     Permissions (..),
+    ProjectId,
     Project (..),
     ProjectStats (..),
     User (..),
     Milestone (..),
     TimeStats (..),
+    IssueId,
     Issue (..),
     Pipeline (..),
     Commit (..),
@@ -46,6 +48,7 @@ module GitLab.Types
     TodoState (..),
     Version (..),
     URL,
+    EditIssueReq (..),
   )
 where
 
@@ -53,6 +56,7 @@ import Control.Monad.Trans.Reader
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time.Clock
 import GHC.Generics
 import Network.HTTP.Conduit
@@ -298,20 +302,26 @@ data TimeStats
       }
   deriving (Generic, Show)
 
+-- | alias for project id
+type ProjectId = Int
+
+-- | alias for issue id
+type IssueId = Int
+
 -- | project issues.
 data Issue
   = Issue
       { issue_state :: Text,
-        issue_description :: Text,
+        issue_description :: Maybe Text,
         issue_author :: User,
         milestone :: Maybe Milestone,
-        issue_project_id :: Int,
+        issue_project_id :: ProjectId,
         assignees :: Maybe [User],
         assignee :: Maybe User,
         updated_at :: Text,
         closed_at :: Maybe Text,
         closed_by :: Maybe User,
-        issue_id :: Int,
+        issue_id :: IssueId,
         issue_title :: Text,
         issue_created_at :: Text,
         iid :: Int,
@@ -645,6 +655,26 @@ data Version
       }
   deriving (Generic, Show)
 
+data EditIssueReq
+  = EditIssueReq
+      { edit_issue_id :: ProjectId,
+        edit_issue_issue_iid :: IssueId,
+        edit_issue_title :: Maybe Text,
+        edit_issue_description :: Maybe Text,
+        edit_issue_confidential :: Maybe Bool,
+        edit_issue_assignee_ids :: Maybe [Int],
+        edit_issue_milestone_id :: Maybe Int,
+        edit_issue_labels :: Maybe [Text],
+        edit_issue_state_event :: Maybe Text,
+        edit_issue_updated_at :: Maybe Text,
+        edit_issue_due_date :: Maybe Text,
+        edit_issue_weight :: Maybe Int,
+        edit_issue_discussion_locked :: Maybe Bool,
+        edit_issue_epic_id :: Maybe Int,
+        edit_issue_epic_iid :: Maybe Int
+      }
+  deriving (Generic, Show)
+
 -----------------------------
 -- JSON GitLab parsers below
 -----------------------------
@@ -973,3 +1003,8 @@ instance FromJSON Version where
           { fieldLabelModifier = bodyNoPrefix
           }
       )
+
+instance ToJSON EditIssueReq where
+  toEncoding =
+    genericToEncoding
+      defaultOptions { fieldLabelModifier = drop (T.length "edit_issue_") }
