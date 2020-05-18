@@ -1025,4 +1025,6 @@ instance FromJSON Version where
 instance ToJSON EditIssueReq where
   toEncoding =
     genericToEncoding
-      defaultOptions { fieldLabelModifier = drop (T.length "edit_issue_") }
+      defaultOptions { fieldLabelModifier = drop (T.length "edit_issue_")
+                     , omitNothingFields = True
+                     }

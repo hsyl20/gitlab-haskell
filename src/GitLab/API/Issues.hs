@@ -58,11 +58,10 @@ userIssues usr =
 
 -- | edits an issue. see <https://docs.gitlab.com/ee/api/issues.html#edit-issue>
 editIssue ::
-  (MonadIO m) =>
   ProjectId ->
   IssueId ->
   EditIssueReq ->
-  GitLab m (Either Status Issue)
+  GitLab (Either Status Issue)
 editIssue projId issueId editIssueReq = do
   let path = "/projects/" <> T.pack (show projId)
              <> "/issues/" <> T.pack (show issueId)
