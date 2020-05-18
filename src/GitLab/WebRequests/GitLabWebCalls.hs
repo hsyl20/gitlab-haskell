@@ -74,12 +74,12 @@ gitlabPost urlPath dataBody = do
     else return (Left (responseStatus resp))
 
 gitlabPut ::
-  (MonadIO m, FromJSON b) =>
+  FromJSON b =>
   -- | the URL to post to
   Text ->
   -- | the data to post
   Text ->
-  GitLab m (Either Status b)
+  GitLab (Either Status b)
 gitlabPut urlPath dataBody = do
   cfg <- serverCfg <$> ask
   manager <- httpManager <$> ask
@@ -89,7 +89,9 @@ gitlabPut urlPath dataBody = do
         request'
           { method = "PUT",
             requestHeaders =
-              [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))],
+              [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))
+              ,("content-type", "application/json")
+              ],
             requestBody = RequestBodyBS (T.encodeUtf8 dataBody)
           }
   resp <- liftIO $ tryGitLab 0 request (retries cfg) manager Nothing
