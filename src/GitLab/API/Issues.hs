@@ -12,14 +12,15 @@ module GitLab.API.Issues where
 
 import Control.Monad.IO.Class
 import Control.Monad.IO.Unlift
+import qualified Data.Aeson as J
 import Data.Either
+import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Lazy
+import qualified Data.Text.Lazy.Encoding
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
 import Network.HTTP.Types.Status
-import qualified Data.Aeson as J
-import qualified Data.Text.Lazy.Encoding
-import qualified Data.Text.Lazy
 
 -- | returns all issues against a project.
 projectOpenedIssues ::
@@ -56,6 +57,41 @@ userIssues usr =
           <> show (user_id usr)
           <> "&scope=all"
 
+-- | create a new issue.
+newIssue ::
+  -- | project
+  Project ->
+  -- | issue title
+  Text ->
+  -- | issue description
+  Text ->
+  GitLab (Either Status Issue)
+newIssue project =
+  newIssue' (project_id project)
+
+  -- | create a new issue.
+newIssue' ::
+  -- | project ID
+  Int ->
+  -- | issue title
+  Text ->
+  -- | issue description
+  Text ->
+  GitLab (Either Status Issue)
+newIssue' projectId issueTitle issueDescription =
+  gitlabPost addr dataBody
+  where
+    dataBody :: Text
+    dataBody =
+      "title="
+        <> issueTitle
+        <> "&description="
+        <> issueDescription
+    addr =
+      "/projects/"
+        <> T.pack (show projectId)
+        <> "/issues"
+
 -- | edits an issue. see <https://docs.gitlab.com/ee/api/issues.html#edit-issue>
 editIssue ::
   ProjectId ->
@@ -63,9 +99,14 @@ editIssue ::
   EditIssueReq ->
   GitLab (Either Status Issue)
 editIssue projId issueId editIssueReq = do
-  let path = "/projects/" <> T.pack (show projId)
-             <> "/issues/" <> T.pack (show issueId)
-  gitlabPut path
-    (Data.Text.Lazy.toStrict
-       (Data.Text.Lazy.Encoding.decodeUtf8
-          (J.encode editIssueReq)))
+  let path =
+        "/projects/" <> T.pack (show projId)
+          <> "/issues/"
+          <> T.pack (show issueId)
+  gitlabPut
+    path
+    ( Data.Text.Lazy.toStrict
+        ( Data.Text.Lazy.Encoding.decodeUtf8
+            (J.encode editIssueReq)
+        )
+    )
