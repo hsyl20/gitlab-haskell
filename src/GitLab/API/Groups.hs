@@ -10,8 +10,6 @@
 -- Stability   : stable
 module GitLab.API.Groups where
 
-import Control.Monad.IO.Class
-import Control.Monad.IO.Unlift
 import qualified Data.ByteString.Char8 as C
 import Data.Maybe
 import Data.Text (Text)

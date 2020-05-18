@@ -9,7 +9,6 @@
 -- Stability   : stable
 module GitLab.API.Pipelines where
 
-import Control.Monad.IO.Unlift
 import Data.Either
 import qualified Data.Text as T
 import GitLab.Types

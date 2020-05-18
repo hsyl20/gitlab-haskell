@@ -10,8 +10,6 @@
 -- Stability   : stable
 module GitLab.API.Projects where
 
-import Control.Monad.IO.Class
-import Control.Monad.IO.Unlift
 import Data.Either
 import Data.List
 import Data.Maybe

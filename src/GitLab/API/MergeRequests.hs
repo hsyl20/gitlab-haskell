@@ -9,7 +9,6 @@
 -- Stability   : stable
 module GitLab.API.MergeRequests where
 
-import Control.Monad.IO.Unlift
 import Data.Either
 import Data.Text (Text)
 import qualified Data.Text as T

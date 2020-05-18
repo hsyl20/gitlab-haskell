@@ -9,7 +9,6 @@
 -- Stability   : stable
 module GitLab.API.RepositoryFiles where
 
-import Control.Monad.IO.Unlift
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T

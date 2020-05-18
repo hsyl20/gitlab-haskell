@@ -10,8 +10,6 @@
 -- Stability   : stable
 module GitLab.API.Issues where
 
-import Control.Monad.IO.Class
-import Control.Monad.IO.Unlift
 import qualified Data.Aeson as J
 import Data.Either
 import Data.Text (Text)
