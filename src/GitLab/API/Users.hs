@@ -10,7 +10,6 @@
 -- Stability   : stable
 module GitLab.API.Users where
 
-import Control.Monad.IO.Class
 import Data.List
 import Data.Maybe
 import Data.Text (Text)

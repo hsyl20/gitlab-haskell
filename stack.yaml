@@ -5,4 +5,9 @@ packages:
 
 extra-deps: []
 
-ghc-options: {"$locals": -ddump-to-file -ddump-hi}
+# old weeder implementation
+# ghc-options: {"$locals": -ddump-to-file -ddump-hi}
+
+# for weeder 2.0
+# ghc-options:
+#  "$locals": -fwrite-ide-info

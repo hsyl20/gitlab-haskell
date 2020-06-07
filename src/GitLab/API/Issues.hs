@@ -67,7 +67,7 @@ newIssue ::
 newIssue project =
   newIssue' (project_id project)
 
-  -- | create a new issue.
+-- | create a new issue.
 newIssue' ::
   -- | project ID
   Int ->

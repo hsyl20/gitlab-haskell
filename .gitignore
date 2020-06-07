@@ -26,3 +26,10 @@ cabal.project.local~
 *.csv
 *.ps
 *.tmp
+#*
+*#
+.#*
+examples/Main
+examples/FileHook
+*~
+~*

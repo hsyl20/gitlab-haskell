@@ -89,8 +89,8 @@ gitlabPut urlPath dataBody = do
         request'
           { method = "PUT",
             requestHeaders =
-              [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))
-              ,("content-type", "application/json")
+              [ ("PRIVATE-TOKEN", T.encodeUtf8 (token cfg)),
+                ("content-type", "application/json")
               ],
             requestBody = RequestBodyBS (T.encodeUtf8 dataBody)
           }
@@ -170,28 +170,30 @@ gitlabReqJsonMany urlPath attrs =
             else go (i + 1) accum'
         else return (Left (responseStatus resp))
 
-gitlabReqOneIO :: Manager -> GitLabServerConfig -> (BSL.ByteString -> output) -> Text -> Text -> IO (Either Status output)
-gitlabReqOneIO manager cfg parser urlPath attrs = go
-  where
-    go = do
-      let url' =
-            url cfg
-              <> "/api/v4"
-              <> urlPath
-              <> "?per_page=100"
-              <> "&page=1"
-              <> attrs
-      let request' = parseRequest_ (T.unpack url')
-          request =
-            request'
-              { requestHeaders =
-                  [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))],
-                responseTimeout = responseTimeoutMicro (timeout cfg)
-              }
-      resp <- tryGitLab 0 request (retries cfg) manager Nothing
-      if successStatus (responseStatus resp)
-        then return (Right (parser (responseBody resp)))
-        else return (Left (responseStatus resp))
+-- not sure what this was planned for
+--
+-- gitlabReqOneIO :: Manager -> GitLabServerConfig -> (BSL.ByteString -> output) -> Text -> Text -> IO (Either Status output)
+-- gitlabReqOneIO manager cfg parser urlPath attrs = go
+--   where
+--     go = do
+--       let url' =
+--             url cfg
+--               <> "/api/v4"
+--               <> urlPath
+--               <> "?per_page=100"
+--               <> "&page=1"
+--               <> attrs
+--       let request' = parseRequest_ (T.unpack url')
+--           request =
+--             request'
+--               { requestHeaders =
+--                   [("PRIVATE-TOKEN", T.encodeUtf8 (token cfg))],
+--                 responseTimeout = responseTimeoutMicro (timeout cfg)
+--               }
+--       resp <- tryGitLab 0 request (retries cfg) manager Nothing
+--       if successStatus (responseStatus resp)
+--         then return (Right (parser (responseBody resp)))
+--         else return (Left (responseStatus resp))
 
 gitlabReqOne :: (BSL.ByteString -> output) -> Text -> Text -> GitLab (Either Status output)
 gitlabReqOne parser urlPath attrs = go
@@ -218,9 +220,11 @@ gitlabReqOne parser urlPath attrs = go
         then return (Right (parser (responseBody resp)))
         else return (Left (responseStatus resp))
 
-gitlabReqJsonOneIO :: (FromJSON a) => Manager -> GitLabServerConfig -> Text -> Text -> IO (Either Status (Maybe a))
-gitlabReqJsonOneIO mgr cfg urlPath attrs =
-  gitlabReqOneIO mgr cfg parseBSOne urlPath attrs
+-- not sure what this was planned for
+--
+-- gitlabReqJsonOneIO :: (FromJSON a) => Manager -> GitLabServerConfig -> Text -> Text -> IO (Either Status (Maybe a))
+-- gitlabReqJsonOneIO mgr cfg urlPath attrs =
+--   gitlabReqOneIO mgr cfg parseBSOne urlPath attrs
 
 gitlabReqJsonOne :: (FromJSON a) => Text -> Text -> GitLab (Either Status (Maybe a))
 gitlabReqJsonOne =
@@ -239,8 +243,10 @@ gitlabUnsafe :: (FromJSON a) => Text -> GitLab [a]
 gitlabUnsafe addr =
   fromRight (error "gitlabUnsafe error") <$> gitlab addr
 
-gitlabOneIO :: (FromJSON a) => Manager -> GitLabServerConfig -> Text -> IO (Either Status (Maybe a))
-gitlabOneIO mgr cfg addr = gitlabReqJsonOneIO mgr cfg addr ""
+-- not sure what this was planned for
+--
+-- gitlabOneIO :: (FromJSON a) => Manager -> GitLabServerConfig -> Text -> IO (Either Status (Maybe a))
+-- gitlabOneIO mgr cfg addr = gitlabReqJsonOneIO mgr cfg addr ""
 
 gitlabOne :: (FromJSON a) => Text -> GitLab (Either Status (Maybe a))
 gitlabOne addr = gitlabReqJsonOne addr ""
