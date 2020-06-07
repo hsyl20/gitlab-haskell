@@ -26,6 +26,7 @@ module GitLab.Types
     ProjectStats (..),
     User (..),
     Milestone (..),
+    MilestoneState (..),
     TimeStats (..),
     IssueId,
     Issue (..),
@@ -43,6 +44,7 @@ module GitLab.Types
     RepositoryFile (..),
     MergeRequest (..),
     Todo (..),
+    TodoProject (..),
     TodoAction (..),
     TodoTarget (..),
     TodoState (..),
@@ -65,23 +67,21 @@ import Network.HTTP.Conduit
 type GitLab a = ReaderT GitLabState IO a
 
 -- | state used by GitLab actions, used internally.
-data GitLabState
-  = GitLabState
-      { serverCfg :: GitLabServerConfig,
-        httpManager :: Manager
-      }
+data GitLabState = GitLabState
+  { serverCfg :: GitLabServerConfig,
+    httpManager :: Manager
+  }
 
 -- | configuration data specific to a GitLab server.
-data GitLabServerConfig
-  = GitLabServerConfig
-      { url :: Text,
-        -- | personal access token, see <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html>
-        token :: Text,
-        -- | milliseconds
-        timeout :: Int,
-        -- | how many times to retry a HTTP request before giving up and returning an error.
-        retries :: Int
-      }
+data GitLabServerConfig = GitLabServerConfig
+  { url :: Text,
+    -- | personal access token, see <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html>
+    token :: Text,
+    -- | milliseconds
+    timeout :: Int,
+    -- | how many times to retry a HTTP request before giving up and returning an error.
+    retries :: Int
+  }
 
 -- | default settings, the 'url' and 'token' values will need to be overwritten.
 defaultGitLabServer :: GitLabServerConfig
@@ -127,138 +127,130 @@ instance Show ArchiveFormat where
   show Zip = ".zip"
 
 -- | member of a project.
-data Member
-  = Member
-      { member_id :: Int,
-        member_name :: Text,
-        member_username :: Text,
-        member_state :: Text,
-        member_avatar_uri :: Maybe Text,
-        member_web_url :: Maybe Text,
-        access_level :: Int,
-        expires_at :: Maybe Text
-      }
+data Member = Member
+  { member_id :: Int,
+    member_name :: Text,
+    member_username :: Text,
+    member_state :: Text,
+    member_avatar_uri :: Maybe Text,
+    member_web_url :: Maybe Text,
+    access_level :: Int,
+    expires_at :: Maybe Text
+  }
   deriving (Generic, Show)
 
 -- | namespaces.
-data Namespace
-  = Namespace
-      { namespace_id :: Int,
-        namespace_name :: Text,
-        namespace_path :: Text,
-        kind :: Text,
-        full_path :: Text,
-        parent_id :: Maybe Int
-      }
+data Namespace = Namespace
+  { namespace_id :: Int,
+    namespace_name :: Text,
+    namespace_path :: Text,
+    kind :: Text,
+    full_path :: Text,
+    parent_id :: Maybe Int
+  }
   deriving (Generic, Show)
 
 -- | links.
-data Links
-  = Links
-      { self :: Text,
-        issues :: Text,
-        merge_requests :: Text,
-        repo_branches :: Text,
-        link_labels :: Text,
-        link_events :: Text,
-        members :: Text
-      }
+data Links = Links
+  { self :: Text,
+    issues :: Text,
+    merge_requests :: Text,
+    repo_branches :: Text,
+    link_labels :: Text,
+    link_events :: Text,
+    members :: Text
+  }
   deriving (Generic, Show)
 
 -- | owners.
-data Owner
-  = Ownwer
-      { owner_id :: Int,
-        owner_name :: Text,
-        owner_username :: Text,
-        state :: Text,
-        owner_avatar_url :: Maybe Text,
-        owner_web_url :: Text
-      }
+data Owner = Ownwer
+  { owner_id :: Int,
+    owner_name :: Text,
+    owner_username :: Text,
+    state :: Text,
+    owner_avatar_url :: Maybe Text,
+    owner_web_url :: Text
+  }
   deriving (Generic, Show)
 
 -- | permissions.
-data Permissions
-  = Permissions
-      { project_access :: Maybe Object,
-        group_access :: Maybe Object
-      }
+data Permissions = Permissions
+  { project_access :: Maybe Object,
+    group_access :: Maybe Object
+  }
   deriving (Generic, Show)
 
 -- | projects.
-data Project
-  = Project
-      { project_id :: Int,
-        description :: Maybe Text,
-        project_name :: Text,
-        name_with_namespace :: Text,
-        project_path :: Text,
-        project_path_with_namespace :: Text,
-        project_created_at :: Text,
-        default_branch :: Maybe Text,
-        tag_list :: [Text], -- check
-        ssh_url_to_repo :: Text,
-        http_url_to_repo :: Text,
-        project_web_url :: Text,
-        readme_url :: Maybe Text, -- check
-        project_avatar_url :: Maybe Text, -- check
-        star_count :: Int,
-        forks_count :: Int,
-        last_activity_at :: Text,
-        namespace :: Namespace,
-        _links :: Maybe Links,
-        archived :: Maybe Bool,
-        visibility :: Maybe Text,
-        owner :: Maybe Owner,
-        resolve_outdated_diff_discussions :: Maybe Bool,
-        container_registry_enabled :: Maybe Bool,
-        issues_enabled :: Maybe Bool,
-        merge_requests_enabled :: Maybe Bool,
-        wiki_enabled :: Maybe Bool,
-        jobs_enabled :: Maybe Bool,
-        snippets_enabled :: Maybe Bool,
-        shared_runners_enabled :: Maybe Bool,
-        lfs_enabled :: Maybe Bool,
-        creator_id :: Maybe Int,
-        forked_from_project :: Maybe Project,
-        import_status :: Maybe String,
-        open_issues_count :: Maybe Int,
-        public_jobs :: Maybe Bool,
-        ci_config_path :: Maybe Text, -- check null
-        shared_with_groups :: Maybe [Object],
-        only_allow_merge_if_pipeline_succeeds :: Maybe Bool,
-        request_access_enabled :: Maybe Bool,
-        only_allow_merge_if_all_discussions_are_resolved :: Maybe Bool,
-        printing_merge_request_link_enabled :: Maybe Bool,
-        merge_method :: Maybe Text,
-        permissions :: Maybe Permissions,
-        project_stats :: Maybe ProjectStats
-      }
+data Project = Project
+  { project_id :: Int,
+    description :: Maybe Text,
+    project_name :: Text,
+    name_with_namespace :: Text,
+    project_path :: Text,
+    project_path_with_namespace :: Text,
+    project_created_at :: Text,
+    default_branch :: Maybe Text,
+    tag_list :: [Text], -- check
+    ssh_url_to_repo :: Text,
+    http_url_to_repo :: Text,
+    project_web_url :: Text,
+    readme_url :: Maybe Text, -- check
+    project_avatar_url :: Maybe Text, -- check
+    star_count :: Int,
+    forks_count :: Int,
+    last_activity_at :: Text,
+    namespace :: Namespace,
+    _links :: Maybe Links,
+    archived :: Maybe Bool,
+    visibility :: Maybe Text,
+    owner :: Maybe Owner,
+    resolve_outdated_diff_discussions :: Maybe Bool,
+    container_registry_enabled :: Maybe Bool,
+    issues_enabled :: Maybe Bool,
+    merge_requests_enabled :: Maybe Bool,
+    wiki_enabled :: Maybe Bool,
+    jobs_enabled :: Maybe Bool,
+    snippets_enabled :: Maybe Bool,
+    shared_runners_enabled :: Maybe Bool,
+    lfs_enabled :: Maybe Bool,
+    creator_id :: Maybe Int,
+    forked_from_project :: Maybe Project,
+    import_status :: Maybe String,
+    open_issues_count :: Maybe Int,
+    public_jobs :: Maybe Bool,
+    ci_config_path :: Maybe Text, -- check null
+    shared_with_groups :: Maybe [Object],
+    only_allow_merge_if_pipeline_succeeds :: Maybe Bool,
+    request_access_enabled :: Maybe Bool,
+    only_allow_merge_if_all_discussions_are_resolved :: Maybe Bool,
+    printing_merge_request_link_enabled :: Maybe Bool,
+    merge_method :: Maybe Text,
+    permissions :: Maybe Permissions,
+    project_stats :: Maybe ProjectStats
+  }
   deriving (Generic, Show)
 
 -- | project statistics.
-data ProjectStats
-  = ProjectStats
-      { commit_count :: Int,
-        storage_size :: Int,
-        repository_size :: Int,
-        wiki_size :: Maybe Int,
-        lfs_objects_size :: Maybe Int,
-        job_artifacts_size :: Maybe Int,
-        packages_size :: Maybe Int
-      }
+data ProjectStats = ProjectStats
+  { commit_count :: Int,
+    storage_size :: Int,
+    repository_size :: Int,
+    wiki_size :: Maybe Int,
+    lfs_objects_size :: Maybe Int,
+    job_artifacts_size :: Maybe Int,
+    packages_size :: Maybe Int
+  }
   deriving (Generic, Show)
 
 -- | registered users.
-data User
-  = User
-      { user_id :: Int,
-        user_username :: Text,
-        user_name :: Text,
-        user_state :: Text,
-        user_avatar_uri :: Maybe Text,
-        user_web_url :: Maybe Text
-      }
+data User = User
+  { user_id :: Int,
+    user_username :: Text,
+    user_name :: Text,
+    user_state :: Text,
+    user_avatar_uri :: Maybe Text,
+    user_web_url :: Maybe Text
+  }
   deriving (Generic, Show)
 
 -- | milestone state.
@@ -273,33 +265,31 @@ instance FromJSON MilestoneState where
   parseJSON x = unexpected x
 
 -- | milestones.
-data Milestone
-  = Milestone
-      { milestone_project_id :: Maybe Int,
-        milestone_group_id :: Maybe Int,
-        milestone_description :: Text,
-        milestone_state :: MilestoneState,
-        milestone_due_date :: Maybe UTCTime,
-        milestone_iid :: Int,
-        milestone_created_at :: Maybe UTCTime,
-        milestone_title :: Text,
-        milestone_id :: Int,
-        milestone_updated_at :: UTCTime,
-        milestone_web_url :: URL
-      }
+data Milestone = Milestone
+  { milestone_project_id :: Maybe Int,
+    milestone_group_id :: Maybe Int,
+    milestone_description :: Text,
+    milestone_state :: MilestoneState,
+    milestone_due_date :: Maybe UTCTime,
+    milestone_iid :: Int,
+    milestone_created_at :: Maybe UTCTime,
+    milestone_title :: Text,
+    milestone_id :: Int,
+    milestone_updated_at :: UTCTime,
+    milestone_web_url :: URL
+  }
   deriving (Generic, Show)
 
 instance FromJSON Milestone where
   parseJSON = genericParseJSON (defaultOptions {fieldLabelModifier = drop 10})
 
 -- | time stats.
-data TimeStats
-  = TimeStats
-      { time_estimate :: Int,
-        total_time_spent :: Int,
-        humane_time_estimate :: Maybe Int,
-        human_total_time_spent :: Maybe Int
-      }
+data TimeStats = TimeStats
+  { time_estimate :: Int,
+    total_time_spent :: Int,
+    humane_time_estimate :: Maybe Int,
+    human_total_time_spent :: Maybe Int
+  }
   deriving (Generic, Show)
 
 -- | alias for project id
@@ -309,252 +299,238 @@ type ProjectId = Int
 type IssueId = Int
 
 -- | project issues.
-data Issue
-  = Issue
-      { issue_state :: Text,
-        issue_description :: Maybe Text,
-        issue_author :: User,
-        milestone :: Maybe Milestone,
-        issue_project_id :: ProjectId,
-        assignees :: Maybe [User],
-        assignee :: Maybe User,
-        updated_at :: Text,
-        closed_at :: Maybe Text,
-        closed_by :: Maybe User,
-        issue_id :: IssueId,
-        issue_title :: Text,
-        issue_created_at :: Text,
-        iid :: Int,
-        issue_labels :: [Text],
-        upvotes :: Int,
-        downvotes :: Int,
-        user_notes_count :: Int,
-        issue_due_date :: Maybe Text,
-        issue_web_url :: Text,
-        confidential :: Bool,
-        weight :: Maybe Text, -- Int?
-        discussion_locked :: Maybe Bool,
-        time_stats :: TimeStats
-      }
+data Issue = Issue
+  { issue_state :: Text,
+    issue_description :: Maybe Text,
+    issue_author :: User,
+    milestone :: Maybe Milestone,
+    issue_project_id :: ProjectId,
+    assignees :: Maybe [User],
+    assignee :: Maybe User,
+    updated_at :: Text,
+    closed_at :: Maybe Text,
+    closed_by :: Maybe User,
+    issue_id :: IssueId,
+    issue_title :: Text,
+    issue_created_at :: Text,
+    iid :: Int,
+    issue_labels :: [Text],
+    upvotes :: Int,
+    downvotes :: Int,
+    user_notes_count :: Int,
+    issue_due_date :: Maybe Text,
+    issue_web_url :: Text,
+    confidential :: Bool,
+    weight :: Maybe Text, -- Int?
+    discussion_locked :: Maybe Bool,
+    time_stats :: TimeStats
+  }
   deriving (Generic, Show)
 
 -- | project pipelines
-data Pipeline
-  = Pipeline
-      { pipeline_id :: Int,
-        sha :: Text,
-        pipeline_ref :: Text,
-        pipeline_status :: Text,
-        pipeline_web_url :: Maybe Text
-      }
+data Pipeline = Pipeline
+  { pipeline_id :: Int,
+    sha :: Text,
+    pipeline_ref :: Text,
+    pipeline_status :: Text,
+    pipeline_web_url :: Maybe Text
+  }
   deriving (Generic, Show)
 
 -- | code commits.
-data Commit
-  = Commit
-      { commit_id :: Text,
-        short_id :: Text,
-        title :: Text,
-        author_name :: Text,
-        author_email :: Text,
-        authored_date :: Text,
-        committer_name :: Text,
-        committer_email :: Text,
-        committed_date :: Text,
-        commit_created_at :: Text,
-        message :: Text,
-        commit_parent_ids :: Maybe [String],
-        last_pipeline :: Maybe Pipeline,
-        commit_stats :: Maybe CommitStats,
-        commit_status :: Maybe Text
-      }
+data Commit = Commit
+  { commit_id :: Text,
+    short_id :: Text,
+    title :: Text,
+    author_name :: Text,
+    author_email :: Text,
+    authored_date :: Text,
+    committer_name :: Text,
+    committer_email :: Text,
+    committed_date :: Text,
+    commit_created_at :: Text,
+    message :: Text,
+    commit_parent_ids :: Maybe [String],
+    last_pipeline :: Maybe Pipeline,
+    commit_stats :: Maybe CommitStats,
+    commit_status :: Maybe Text
+  }
   deriving (Generic, Show)
 
 -- | summary of a code commit for TODOs.
-data CommitTodo
-  = CommitTodo
-      { todo_commit_id :: Text,
-        todo_commit_short_id :: Text,
-        todo_commit_created_at :: Text,
-        todo_parent_ids :: Maybe [String]
-      }
+data CommitTodo = CommitTodo
+  { todo_commit_id :: Text,
+    todo_commit_short_id :: Text,
+    todo_commit_created_at :: Text,
+    todo_parent_ids :: Maybe [String]
+  }
   deriving (Generic, Show)
 
 -- | commit stats.
-data CommitStats
-  = Stats
-      { additions :: Int,
-        deletions :: Int,
-        total :: Int
-      }
+data CommitStats = Stats
+  { additions :: Int,
+    deletions :: Int,
+    total :: Int
+  }
   deriving (Generic, Show)
 
 -- | diff between two commits.
-data Diff
-  = Diff
-      { diff :: Text,
-        new_path :: Text,
-        old_path :: Text,
-        a_mode :: Maybe Text,
-        b_mode :: Maybe Text,
-        new_file :: Bool,
-        renamed_file :: Bool,
-        deleted_file :: Bool
-      }
+data Diff = Diff
+  { diff :: Text,
+    new_path :: Text,
+    old_path :: Text,
+    a_mode :: Maybe Text,
+    b_mode :: Maybe Text,
+    new_file :: Bool,
+    renamed_file :: Bool,
+    deleted_file :: Bool
+  }
   deriving (Generic, Show)
 
 -- | repositories.
-data Repository
-  = Repository
-      { repository_id :: Text,
-        repository_name :: Text,
-        repository_type :: Text,
-        repository_path :: Text,
-        mode :: Text
-      }
+data Repository = Repository
+  { repository_id :: Text,
+    repository_name :: Text,
+    repository_type :: Text,
+    repository_path :: Text,
+    mode :: Text
+  }
   deriving (Generic, Show)
 
 -- | jobs.
-data Job
-  = Job
-      { job_commit :: Commit,
-        job_coverage :: Maybe Text, -- ?
-        job_created_at :: Text,
-        job_started_at :: Text,
-        job_finished_at :: Text,
-        job_duration :: Double,
-        job_artifacts_expire_at :: Maybe Text,
-        job_id :: Int,
-        job_name :: Text,
-        job_pipeline :: Pipeline,
-        job_ref :: Text,
-        job_artifacts :: [Artifact],
-        -- , runner :: Maybe Text
-        job_stage :: Text,
-        job_status :: Text,
-        job_tag :: Bool,
-        job_web_url :: Text,
-        job_user :: User
-      }
+data Job = Job
+  { job_commit :: Commit,
+    job_coverage :: Maybe Text, -- ?
+    job_created_at :: Text,
+    job_started_at :: Text,
+    job_finished_at :: Text,
+    job_duration :: Double,
+    job_artifacts_expire_at :: Maybe Text,
+    job_id :: Int,
+    job_name :: Text,
+    job_pipeline :: Pipeline,
+    job_ref :: Text,
+    job_artifacts :: [Artifact],
+    -- , runner :: Maybe Text
+    job_stage :: Text,
+    job_status :: Text,
+    job_tag :: Bool,
+    job_web_url :: Text,
+    job_user :: User
+  }
   deriving (Generic, Show)
 
 -- | artifacts.
-data Artifact
-  = Artifact
-      { file_type :: Text,
-        size :: Int,
-        filename :: Text,
-        file_format :: Maybe Text
-      }
+data Artifact = Artifact
+  { file_type :: Text,
+    size :: Int,
+    filename :: Text,
+    file_format :: Maybe Text
+  }
   deriving (Generic, Show)
 
 -- | groups.
-data Group
-  = Group
-      { group_id :: Int,
-        group_name :: Text,
-        group_path :: Text,
-        group_description :: Text,
-        group_visibility :: Text,
-        group_lfs_enabled :: Bool,
-        group_avatar_url :: Maybe Text,
-        group_web_url :: Text,
-        group_request_access_enabled :: Bool,
-        group_full_name :: Text,
-        group_full_path :: Text,
-        group_file_template_project_id :: Maybe Int,
-        group_parent_id :: Maybe Int
-      }
+data Group = Group
+  { group_id :: Int,
+    group_name :: Text,
+    group_path :: Text,
+    group_description :: Text,
+    group_visibility :: Text,
+    group_lfs_enabled :: Bool,
+    group_avatar_url :: Maybe Text,
+    group_web_url :: Text,
+    group_request_access_enabled :: Bool,
+    group_full_name :: Text,
+    group_full_path :: Text,
+    group_file_template_project_id :: Maybe Int,
+    group_parent_id :: Maybe Int
+  }
   deriving (Generic, Show)
 
 -- | response to sharing a project with a group.
-data GroupShare
-  = GroupShare
-      { share_id :: Int,
-        share_project_id :: Int,
-        share_group_id :: Int,
-        share_group_access :: Int,
-        share_expires_at :: Maybe Text
-      }
+data GroupShare = GroupShare
+  { share_id :: Int,
+    share_project_id :: Int,
+    share_group_id :: Int,
+    share_group_access :: Int,
+    share_expires_at :: Maybe Text
+  }
   deriving (Generic, Show)
 
 -- | code branches.
-data Branch
-  = Branch
-      { branch_name :: Text,
-        merged :: Bool,
-        protected :: Bool,
-        branch_default :: Bool,
-        developers_can_push :: Bool,
-        developers_can_merge :: Bool,
-        can_push :: Bool,
-        branch_commit :: Commit
-      }
+data Branch = Branch
+  { branch_name :: Text,
+    merged :: Bool,
+    protected :: Bool,
+    branch_default :: Bool,
+    developers_can_push :: Bool,
+    developers_can_merge :: Bool,
+    can_push :: Bool,
+    branch_commit :: Commit
+  }
   deriving (Generic, Show)
 
 -- | files in a repository.
-data RepositoryFile
-  = RepositoryFile
-      { repository_file_file_name :: Text,
-        repository_file_file_path :: Text,
-        repository_file_size :: Int,
-        encoding :: Text,
-        content :: Text,
-        content_sha256 :: Text,
-        ref :: Text,
-        blob_id :: Text,
-        repository_file_commit_id :: Text,
-        last_commit_id :: Text
-      }
+data RepositoryFile = RepositoryFile
+  { repository_file_file_name :: Text,
+    repository_file_file_path :: Text,
+    repository_file_size :: Int,
+    encoding :: Text,
+    content :: Text,
+    content_sha256 :: Text,
+    ref :: Text,
+    blob_id :: Text,
+    repository_file_commit_id :: Text,
+    last_commit_id :: Text
+  }
   deriving (Generic, Show)
 
 -- | project merge requests.
-data MergeRequest
-  = MergeRequest
-      { merge_request_id :: Int,
-        merge_request_iid :: Int,
-        merge_request_project_id :: Int,
-        merge_request_title :: Text,
-        merge_request_description :: Text,
-        merge_request_state :: Text,
-        merge_request_merged_by :: Maybe User,
-        merge_request_merged_at :: Maybe Text,
-        merge_request_closed_by :: Maybe User,
-        merge_request_closed_at :: Maybe Text,
-        merge_request_created_at :: Text,
-        merge_request_updated_at :: Text,
-        merge_request_target_branch :: Text,
-        merge_request_source_branch :: Text,
-        merge_request_upvotes :: Int,
-        merge_request_downvotes :: Int,
-        merge_request_author :: User,
-        merge_request_assignee :: Maybe User,
-        merge_request_source_project_id :: Int,
-        merge_request_target_project_id :: Int,
-        merge_request_labels :: [Text],
-        merge_request_work_in_progress :: Bool,
-        merge_request_milestone :: Maybe Milestone,
-        merge_request_merge_when_pipeline_succeeds :: Bool,
-        merge_request_merge_status :: Text,
-        merge_request_sha :: Text,
-        merge_request_merge_commit_sha :: Maybe Text,
-        merge_request_user_notes_count :: Int,
-        merge_request_discussion_locked :: Maybe Bool,
-        merge_request_should_remove_source_branch :: Maybe Bool,
-        merge_request_force_remove_source_branch :: Maybe Bool,
-        merge_request_allow_collaboration :: Maybe Bool,
-        merge_request_allow_maintainer_to_push :: Maybe Bool,
-        merge_request_web_url :: Text,
-        merge_request_time_stats :: TimeStats,
-        merge_request_squash :: Bool,
-        merge_request_changes_count :: Maybe Int,
-        merge_request_pipeline :: Maybe Pipeline,
-        merge_request_diverged_commits_count :: Maybe Int,
-        merge_request_rebase_in_progress :: Maybe Bool,
-        merge_request_has_conflicts :: Bool,
-        merge_request_blocking_discussions_resolved :: Maybe Bool,
-        merge_request_approvals_before_merge :: Maybe Bool -- ?
-      }
+data MergeRequest = MergeRequest
+  { merge_request_id :: Int,
+    merge_request_iid :: Int,
+    merge_request_project_id :: Int,
+    merge_request_title :: Text,
+    merge_request_description :: Text,
+    merge_request_state :: Text,
+    merge_request_merged_by :: Maybe User,
+    merge_request_merged_at :: Maybe Text,
+    merge_request_closed_by :: Maybe User,
+    merge_request_closed_at :: Maybe Text,
+    merge_request_created_at :: Text,
+    merge_request_updated_at :: Text,
+    merge_request_target_branch :: Text,
+    merge_request_source_branch :: Text,
+    merge_request_upvotes :: Int,
+    merge_request_downvotes :: Int,
+    merge_request_author :: User,
+    merge_request_assignee :: Maybe User,
+    merge_request_source_project_id :: Int,
+    merge_request_target_project_id :: Int,
+    merge_request_labels :: [Text],
+    merge_request_work_in_progress :: Bool,
+    merge_request_milestone :: Maybe Milestone,
+    merge_request_merge_when_pipeline_succeeds :: Bool,
+    merge_request_merge_status :: Text,
+    merge_request_sha :: Text,
+    merge_request_merge_commit_sha :: Maybe Text,
+    merge_request_user_notes_count :: Int,
+    merge_request_discussion_locked :: Maybe Bool,
+    merge_request_should_remove_source_branch :: Maybe Bool,
+    merge_request_force_remove_source_branch :: Maybe Bool,
+    merge_request_allow_collaboration :: Maybe Bool,
+    merge_request_allow_maintainer_to_push :: Maybe Bool,
+    merge_request_web_url :: Text,
+    merge_request_time_stats :: TimeStats,
+    merge_request_squash :: Bool,
+    merge_request_changes_count :: Maybe Int,
+    merge_request_pipeline :: Maybe Pipeline,
+    merge_request_diverged_commits_count :: Maybe Int,
+    merge_request_rebase_in_progress :: Maybe Bool,
+    merge_request_has_conflicts :: Bool,
+    merge_request_blocking_discussions_resolved :: Maybe Bool,
+    merge_request_approvals_before_merge :: Maybe Bool -- ?
+  }
   deriving (Generic, Show)
 
 -- | TODO actions.
@@ -599,34 +575,33 @@ instance FromJSON TodoState where
   parseJSON (String "done") = return TSDone
   parseJSON x = unexpected x
 
-data TodoProject
-  = TP
-      { tp_id :: Int,
-        tp_description :: Text,
-        tp_name :: Text,
-        tp_name_with_namespace :: Text,
-        tp_path :: Text,
-        tp_path_with_namespace :: Text,
-        tp_created_at :: UTCTime
-      }
+-- | A project TODO.
+data TodoProject = TP
+  { tp_id :: Int,
+    tp_description :: Text,
+    tp_name :: Text,
+    tp_name_with_namespace :: Text,
+    tp_path :: Text,
+    tp_path_with_namespace :: Text,
+    tp_created_at :: UTCTime
+  }
   deriving (Generic, Show)
 
 instance FromJSON TodoProject where
   parseJSON = genericParseJSON (defaultOptions {fieldLabelModifier = drop 3})
 
 -- | TODOs.
-data Todo
-  = Todo
-      { todo_id :: Int,
-        todo_project :: TodoProject,
-        todo_author :: User,
-        todo_action_name :: TodoAction,
-        todo_target :: TodoTarget,
-        todo_target_url :: URL,
-        todo_body :: Text,
-        todo_state :: TodoState,
-        todo_created_at :: UTCTime
-      }
+data Todo = Todo
+  { todo_id :: Int,
+    todo_project :: TodoProject,
+    todo_author :: User,
+    todo_action_name :: TodoAction,
+    todo_target :: TodoTarget,
+    todo_target_url :: URL,
+    todo_body :: Text,
+    todo_state :: TodoState,
+    todo_created_at :: UTCTime
+  }
   deriving (Show)
 
 instance FromJSON Todo where
@@ -648,31 +623,30 @@ instance FromJSON Todo where
       <*> v .: "created_at"
 
 -- | version of the GitLab instance.
-data Version
-  = Version
-      { version :: Text,
-        revision :: Text
-      }
+data Version = Version
+  { version :: Text,
+    revision :: Text
+  }
   deriving (Generic, Show)
 
-data EditIssueReq
-  = EditIssueReq
-      { edit_issue_id :: ProjectId,
-        edit_issue_issue_iid :: IssueId,
-        edit_issue_title :: Maybe Text,
-        edit_issue_description :: Maybe Text,
-        edit_issue_confidential :: Maybe Bool,
-        edit_issue_assignee_ids :: Maybe [Int],
-        edit_issue_milestone_id :: Maybe Int,
-        edit_issue_labels :: Maybe [Text],
-        edit_issue_state_event :: Maybe Text,
-        edit_issue_updated_at :: Maybe Text,
-        edit_issue_due_date :: Maybe Text,
-        edit_issue_weight :: Maybe Int,
-        edit_issue_discussion_locked :: Maybe Bool,
-        edit_issue_epic_id :: Maybe Int,
-        edit_issue_epic_iid :: Maybe Int
-      }
+-- | An edit issue request.
+data EditIssueReq = EditIssueReq
+  { edit_issue_id :: ProjectId,
+    edit_issue_issue_iid :: IssueId,
+    edit_issue_title :: Maybe Text,
+    edit_issue_description :: Maybe Text,
+    edit_issue_confidential :: Maybe Bool,
+    edit_issue_assignee_ids :: Maybe [Int],
+    edit_issue_milestone_id :: Maybe Int,
+    edit_issue_labels :: Maybe [Text],
+    edit_issue_state_event :: Maybe Text,
+    edit_issue_updated_at :: Maybe Text,
+    edit_issue_due_date :: Maybe Text,
+    edit_issue_weight :: Maybe Int,
+    edit_issue_discussion_locked :: Maybe Bool,
+    edit_issue_epic_id :: Maybe Int,
+    edit_issue_epic_iid :: Maybe Int
+  }
   deriving (Generic, Show)
 
 -----------------------------
@@ -698,7 +672,6 @@ bodyNoPrefix "issue_project_id" = "project_id"
 bodyNoPrefix "issue_state" = "state"
 bodyNoPrefix "issue_title" = "title"
 bodyNoPrefix "issue_web_url" = "web_url"
-bodyNoPrefix "job_web_url" = "web_url"
 bodyNoPrefix "link_events" = "events"
 bodyNoPrefix "link_labels" = "labels"
 bodyNoPrefix "member_avatar_url" = "avatar_url"
@@ -737,7 +710,6 @@ bodyNoPrefix "user_username" = "username"
 bodyNoPrefix "user_web_url" = "we_url"
 bodyNoPrefix "event_title" = "title"
 bodyNoPrefix "event_project_id" = "project_id"
-bodyNoPrefix "job_ref" = "ref"
 bodyNoPrefix "pipeline_ref" = "ref"
 bodyNoPrefix "branch_name" = "name"
 bodyNoPrefix "branch_default" = "default"
@@ -811,22 +783,22 @@ bodyNoPrefix "group_full_path" = "full_path"
 bodyNoPrefix "group_file_template_project_id" = "file_template_project_id"
 bodyNoPrefix "group_parent_id" = "parent_id"
 bodyNoPrefix "job_commit" = "commit"
-bodyNoPrefix "job_coverage" = "job_coverage"
-bodyNoPrefix "job_created_at" = "job_created_at"
-bodyNoPrefix "job_started_at" = "job_started_at"
-bodyNoPrefix "job_finished_at" = "job_finished_at"
-bodyNoPrefix "job_duration" = "job_duration"
-bodyNoPrefix "job_artifacts_expire_at" = "job_artifacts_expire_at"
-bodyNoPrefix "job_id" = "job_id"
-bodyNoPrefix "job_name" = "job_name"
-bodyNoPrefix "job_pipeline" = "job_pipeline"
-bodyNoPrefix "job_ref" = "job_ref"
-bodyNoPrefix "job_artifacts" = "job_artifacts"
-bodyNoPrefix "job_stage" = "job_stage"
-bodyNoPrefix "job_status" = "job_status"
-bodyNoPrefix "job_tag" = "job_tag"
-bodyNoPrefix "job_web_url" = "job_web_url"
-bodyNoPrefix "job_user" = "job_user"
+bodyNoPrefix "job_coverage" = "coverage"
+bodyNoPrefix "job_created_at" = "created_at"
+bodyNoPrefix "job_started_at" = "started_at"
+bodyNoPrefix "job_finished_at" = "finished_at"
+bodyNoPrefix "job_duration" = "duration"
+bodyNoPrefix "job_artifacts_expire_at" = "artifacts_expire_at"
+bodyNoPrefix "job_id" = "id"
+bodyNoPrefix "job_name" = "name"
+bodyNoPrefix "job_pipeline" = "pipeline"
+bodyNoPrefix "job_ref" = "ref"
+bodyNoPrefix "job_artifacts" = "artifacts"
+bodyNoPrefix "job_stage" = "stage"
+bodyNoPrefix "job_status" = "status"
+bodyNoPrefix "job_tag" = "tag"
+bodyNoPrefix "job_web_url" = "web_url"
+bodyNoPrefix "job_user" = "user"
 -- TODO field names for Issues data type
 bodyNoPrefix s = s
 
@@ -1025,6 +997,7 @@ instance FromJSON Version where
 instance ToJSON EditIssueReq where
   toEncoding =
     genericToEncoding
-      defaultOptions { fieldLabelModifier = drop (T.length "edit_issue_")
-                     , omitNothingFields = True
-                     }
+      defaultOptions
+        { fieldLabelModifier = drop (T.length "edit_issue_"),
+          omitNothingFields = True
+        }

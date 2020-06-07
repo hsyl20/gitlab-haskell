@@ -137,7 +137,7 @@ projectOfIssue issue = do
 --
 -- > issuesCreatedByUser "user1"
 --
--- returns a (user,projects) tuple, where 'user' is the 'User' found
+-- returns a (user,projects) tuple, where user is the 'User' found
 -- for the given searched username, and a list of 'Project's that the
 -- user has created issues for.
 issuesCreatedByUser :: Text -> GitLab (Maybe (User, [Project]))

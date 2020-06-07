@@ -9,7 +9,6 @@
 -- Stability   : stable
 module GitLab.API.Todos where
 
-import Control.Monad.IO.Class
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
 
