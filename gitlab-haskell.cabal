@@ -103,6 +103,7 @@ test-suite test-gitlab-haskell
   main-is:       Tests.hs
   other-modules: SystemHookTests
   hs-source-dirs: tests/
+  default-language: Haskell2010
   build-depends: base >= 4.8.0.0 && < 6
                , tasty
                , tasty-hunit
