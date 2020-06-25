@@ -56,8 +56,8 @@ import GitLab.Types
 
 -- | Pattern matching rules on GitLab hook events.
 data Rule where
-  Match :: (Typeable a) => String -> (a -> GitLab ()) -> Rule
-  MatchIf :: (Typeable a) => String -> (a -> GitLab Bool) -> (a -> GitLab ()) -> Rule
+  Match :: (Typeable a, SystemHook a) => String -> (a -> GitLab ()) -> Rule
+  MatchIf :: (Typeable a, SystemHook a) => String -> (a -> GitLab Bool) -> (a -> GitLab ()) -> Rule
 
 -- | A typeclass for GitLab hook events.
 class (FromJSON a) => SystemHook a where
