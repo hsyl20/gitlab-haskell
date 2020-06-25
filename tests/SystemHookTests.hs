@@ -18,7 +18,8 @@ systemHookTests =
 
 parserTests :: TestTree
 parserTests =
-  testGroup "GitLab system hook rules" $
+  testGroup
+    "GitLab system hook rules"
     [ testCase
         "project-create-event"
         ( readFile "data/system-hooks/project-created.json"
@@ -129,16 +130,16 @@ parserTests =
         ( readFile "data/system-hooks/tag-push.json"
             >>= \eventJson -> parseEvent eventJson @?= Just tagPushHaskell
         )
-        -- testCase
-        --   "merge-request-event"
-        --   ( readFile "data/system-hooks/merge-request.json"
-        --       >>= \eventJson -> parseEvent eventJson @?= Just mergeRequestHaskell
-        --   ),
-        -- testCase
-        --   "repository-update-event"
-        --   ( readFile "data/system-hooks/repository-update.json"
-        --       >>= \eventJson -> parseEvent eventJson @?= Just repositoryUpdateHaskell
-        -- )
+      -- testCase
+      --   "merge-request-event"
+      --   ( readFile "data/system-hooks/merge-request.json"
+      --       >>= \eventJson -> parseEvent eventJson @?= Just mergeRequestHaskell
+      --   ),
+      -- testCase
+      --   "repository-update-event"
+      --   ( readFile "data/system-hooks/repository-update.json"
+      --       >>= \eventJson -> parseEvent eventJson @?= Just repositoryUpdateHaskell
+      -- )
     ]
 
 matchTest :: String -> String -> Rule -> String -> Rule -> [TestTree]
@@ -258,7 +259,8 @@ matchIfTests =
 
 receiveTests :: TestTree
 receiveTests =
-  testGroup "GitLab system hooks receive" $
+  testGroup
+    "GitLab system hooks receive"
     [ testCase "1-rule-match"
         $ runGitLabDbg
         $ liftIO (readFile "data/system-hooks/project-created.json")
