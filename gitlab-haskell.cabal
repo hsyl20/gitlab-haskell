@@ -1,7 +1,7 @@
 cabal-version: 2.4
 name:           gitlab-haskell
 category:       Git
-version:        0.1.8
+version:        0.2
 synopsis:       A Haskell library for the GitLab web API
 description:
             This Haskell library queries and updates the database of a GitLab instance using the GitLab web API: <https://docs.gitlab.com/ee/api/>
@@ -28,6 +28,16 @@ description:
             > searchUser   :: Text -> GitLab m (Maybe User)
             > userProjects :: User -> GitLab m (Maybe [Project])
             .
+            This library can also be used to develop rule based GitLab file hooks that react in real time to GitLab events with:
+            .
+            > receive :: [Rule] -> GitLab ()
+            .
+            > class (FromJSON a) => SystemHook a where
+            >   match   :: String -> (a -> GitLab ()) -> Rule
+            >   matchIf :: String -> (a -> GitLab Bool) -> (a -> GitLab ()) -> Rule
+            .
+            For more details about the file hooks support: <https://www.macs.hw.ac.uk/~rs46/posts/2020-06-06-gitlab-system-hooks.html>
+            .
             Unsurprisingly, this library is maintained on GitLab: <https://gitlab.com/robstewart57/gitlab-haskell>
 
 
@@ -35,7 +45,7 @@ homepage:       https://gitlab.com/robstewart57/gitlab-haskell
 bug-reports:    https://gitlab.com/robstewart57/gitlab-haskell/issues
 author:         Rob Stewart
 maintainer:     robstewart57@gmail.com
-copyright:      2019 Rob Stewart, Heriot-Watt University
+copyright:      2020 Rob Stewart, Heriot-Watt University
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
@@ -84,6 +94,9 @@ library
               , time
   default-language: Haskell2010
   ghc-options: -Wall
+               -- the following two for the stan static analysis tool
+               -- -fwrite-ide-info
+               -- -hiedir=.hie
 
 test-suite test-gitlab-haskell
   type:          exitcode-stdio-1.0
