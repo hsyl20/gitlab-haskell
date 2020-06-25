@@ -10,7 +10,6 @@
 -- Stability   : stable
 module GitLab.API.Groups where
 
-import qualified Data.ByteString.Char8 as C
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -81,7 +80,7 @@ addUserToGroup' groupName access userId = do
   attempt <- groupsWithNameOrPath groupName
   case attempt of
     Left httpStatus -> return (Left httpStatus)
-    Right [] -> return (Left (mkStatus 404 (C.pack "cannot find group")))
+    Right [] -> return (Left (mkStatus 404 (T.encodeUtf8 (T.pack "cannot find group"))))
     Right [grp] ->
       gitlabPost addr dataBody
       where
@@ -94,7 +93,7 @@ addUserToGroup' groupName access userId = do
             <> T.decodeUtf8 (urlEncode False (T.encodeUtf8 (T.pack (show (group_id grp)))))
             <> "/members"
     Right (_ : _) ->
-      return (Left (mkStatus 404 (C.pack "too many groups found")))
+      return (Left (mkStatus 404 (T.encodeUtf8 (T.pack "too many groups found"))))
 
 -- | adds a list of users to a group.
 addUsersToGroup ::

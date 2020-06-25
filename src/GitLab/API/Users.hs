@@ -32,9 +32,9 @@ searchUser username = do
   let path = "/users"
       attrs = "&username=" <> username
   res <- gitlabWithAttrsUnsafe path attrs
-  if null res
-    then return Nothing
-    else return (Just (head res))
+  case res of
+    [] -> return Nothing
+    (user : _) -> return (Just user)
 
 -- | searches for users given a list of usernames, returns them in
 -- alphabetical order of their usernames.

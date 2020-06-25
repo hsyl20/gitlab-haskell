@@ -12,7 +12,6 @@ module GitLab.API.Projects where
 
 import Data.Either
 import Data.List
-import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -131,7 +130,9 @@ userProjects theUser =
 projectOfIssue :: Issue -> GitLab Project
 projectOfIssue issue = do
   result <- searchProjectId (issue_project_id issue)
-  return (fromJust (fromRight (error "projectOfIssue error") result))
+  case fromRight (error "projectOfIssue error") result of
+    Nothing -> error "projectOfIssue error"
+    Just proj -> return proj
 
 -- | finds all issues created by a user.
 --

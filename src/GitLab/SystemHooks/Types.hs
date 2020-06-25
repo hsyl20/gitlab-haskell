@@ -3,6 +3,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StrictData #-}
 {-# LANGUAGE TypeFamilies #-}
 
 -- |
@@ -589,8 +590,8 @@ instance FromJSON ProjectCreate where
                 <*> v .: "path_with_namespace"
                 <*> v .: "project_id"
                 <*> v .: "project_visibility"
-            _ -> fail "project_create parsing failed"
-        _ -> fail "project_create parsing failed"
+            _unexpected -> fail "project_create parsing failed"
+        _unexpected -> fail "project_create parsing failed"
 
 instance FromJSON ProjectDestroy where
   parseJSON =
@@ -611,8 +612,8 @@ instance FromJSON ProjectDestroy where
                 <*> v .: "path_with_namespace"
                 <*> v .: "project_id"
                 <*> v .: "project_visibility"
-            _ -> fail "project_destroy parsing failed"
-        _ -> fail "project_destroy parsing failed"
+            _unexpected -> fail "project_destroy parsing failed"
+        _unexpected -> fail "project_destroy parsing failed"
 
 instance FromJSON ProjectRename where
   parseJSON =
@@ -634,8 +635,8 @@ instance FromJSON ProjectRename where
                 <*> v .: "owner_email"
                 <*> v .: "project_visibility"
                 <*> v .: "old_path_with_namespace"
-            _ -> fail "project_rename parsing failed"
-        _ -> fail "project_rename parsing failed"
+            _unexpected -> fail "project_rename parsing failed"
+        _unexpected -> fail "project_rename parsing failed"
 
 instance FromJSON ProjectTransfer where
   parseJSON =
@@ -657,8 +658,8 @@ instance FromJSON ProjectTransfer where
                 <*> v .: "owner_email"
                 <*> v .: "project_visibility"
                 <*> v .: "old_path_with_namespace"
-            _ -> fail "project_transfer parsing failed"
-        _ -> fail "project_transfer parsing failed"
+            _unexpected -> fail "project_transfer parsing failed"
+        _unexpected -> fail "project_transfer parsing failed"
 
 instance FromJSON ProjectUpdate where
   parseJSON =
@@ -679,8 +680,8 @@ instance FromJSON ProjectUpdate where
                 <*> v .: "path_with_namespace"
                 <*> v .: "project_id"
                 <*> v .: "project_visibility"
-            _ -> fail "project_update parsing failed"
-        _ -> fail "project_update parsing failed"
+            _unexpected -> fail "project_update parsing failed"
+        _unexpected -> fail "project_update parsing failed"
 
 instance FromJSON UserAddToTeam where
   parseJSON =
@@ -704,8 +705,8 @@ instance FromJSON UserAddToTeam where
                 <*> v .: "user_username"
                 <*> v .: "user_id"
                 <*> v .: "project_visibility"
-            _ -> fail "user_add_to_team parsing failed"
-        _ -> fail "user_add_to_team parsing failed"
+            _unexpected -> fail "user_add_to_team parsing failed"
+        _unexpected -> fail "user_add_to_team parsing failed"
 
 instance FromJSON UserUpdateForTeam where
   parseJSON =
@@ -729,8 +730,8 @@ instance FromJSON UserUpdateForTeam where
                 <*> v .: "user_username"
                 <*> v .: "user_id"
                 <*> v .: "project_visibility"
-            _ -> fail "user_update_for_team parsing failed"
-        _ -> fail "user_update_for_team parsing failed"
+            _unexpected -> fail "user_update_for_team parsing failed"
+        _unexpected -> fail "user_update_for_team parsing failed"
 
 instance FromJSON UserRemoveFromTeam where
   parseJSON =
@@ -754,8 +755,8 @@ instance FromJSON UserRemoveFromTeam where
                 <*> v .: "user_username"
                 <*> v .: "user_id"
                 <*> v .: "project_visibility"
-            _ -> fail "user_remove_from_team parsing failed"
-        _ -> fail "user_remove_from_team parsing failed"
+            _unexpected -> fail "user_remove_from_team parsing failed"
+        _unexpected -> fail "user_remove_from_team parsing failed"
 
 instance FromJSON UserCreate where
   parseJSON =
@@ -773,8 +774,8 @@ instance FromJSON UserCreate where
                 <*> v .: "name"
                 <*> v .: "username"
                 <*> v .: "user_id"
-            _ -> fail "user_create parsing failed"
-        _ -> fail "user_create parsing failed"
+            _unexpected -> fail "user_create parsing failed"
+        _unexpected -> fail "user_create parsing failed"
 
 instance FromJSON UserRemove where
   parseJSON =
@@ -792,8 +793,8 @@ instance FromJSON UserRemove where
                 <*> v .: "name"
                 <*> v .: "username"
                 <*> v .: "user_id"
-            _ -> fail "user_destroy parsing failed"
-        _ -> fail "user_destroy parsing failed"
+            _unexpected -> fail "user_destroy parsing failed"
+        _unexpected -> fail "user_destroy parsing failed"
 
 instance FromJSON UserFailedLogin where
   parseJSON =
@@ -812,8 +813,8 @@ instance FromJSON UserFailedLogin where
                 <*> v .: "user_id"
                 <*> v .: "username"
                 <*> v .: "state"
-            _ -> fail "user_failed_login parsing failed"
-        _ -> fail "user_failed_login parsing failed"
+            _unexpected -> fail "user_failed_login parsing failed"
+        _unexpected -> fail "user_failed_login parsing failed"
 
 instance FromJSON UserRename where
   parseJSON =
@@ -832,8 +833,8 @@ instance FromJSON UserRename where
                 <*> v .: "user_id"
                 <*> v .: "username"
                 <*> v .: "old_username"
-            _ -> fail "user_rename parsing failed"
-        _ -> fail "user_rename parsing failed"
+            _unexpected -> fail "user_rename parsing failed"
+        _unexpected -> fail "user_rename parsing failed"
 
 instance FromJSON KeyCreate where
   parseJSON =
@@ -850,8 +851,8 @@ instance FromJSON KeyCreate where
                 <*> v .: "username"
                 <*> v .: "key"
                 <*> v .: "id"
-            _ -> fail "key_create parsing failed"
-        _ -> fail "key_create parsing failed"
+            _unexpected -> fail "key_create parsing failed"
+        _unexpected -> fail "key_create parsing failed"
 
 instance FromJSON KeyRemove where
   parseJSON =
@@ -868,8 +869,8 @@ instance FromJSON KeyRemove where
                 <*> v .: "username"
                 <*> v .: "key"
                 <*> v .: "id"
-            _ -> fail "key_destroy parsing failed"
-        _ -> fail "key_destroy parsing failed"
+            _unexpected -> fail "key_destroy parsing failed"
+        _unexpected -> fail "key_destroy parsing failed"
 
 instance FromJSON GroupCreate where
   parseJSON =
@@ -888,8 +889,8 @@ instance FromJSON GroupCreate where
                 <*> v .: "owner_name"
                 <*> v .: "path"
                 <*> v .: "group_id"
-            _ -> fail "group_create parsing failed"
-        _ -> fail "group_create parsing failed"
+            _unexpected -> fail "group_create parsing failed"
+        _unexpected -> fail "group_create parsing failed"
 
 instance FromJSON GroupRemove where
   parseJSON =
@@ -908,8 +909,8 @@ instance FromJSON GroupRemove where
                 <*> v .: "owner_name"
                 <*> v .: "path"
                 <*> v .: "group_id"
-            _ -> fail "group_remove parsing failed"
-        _ -> fail "group_remove parsing failed"
+            _unexpected -> fail "group_remove parsing failed"
+        _unexpected -> fail "group_remove parsing failed"
 
 instance FromJSON GroupRename where
   parseJSON =
@@ -931,8 +932,8 @@ instance FromJSON GroupRename where
                 <*> v .: "owner_email"
                 <*> v .: "old_path"
                 <*> v .: "old_full_path"
-            _ -> fail "group_rename parsing failed"
-        _ -> fail "group_rename parsing failed"
+            _unexpected -> fail "group_rename parsing failed"
+        _unexpected -> fail "group_rename parsing failed"
 
 instance FromJSON NewGroupMember where
   parseJSON =
@@ -954,8 +955,8 @@ instance FromJSON NewGroupMember where
                 <*> v .: "user_name"
                 <*> v .: "user_username"
                 <*> v .: "user_id"
-            _ -> fail "user_add_to_group parsing failed"
-        _ -> fail "user_add_to_group parsing failed"
+            _unexpected -> fail "user_add_to_group parsing failed"
+        _unexpected -> fail "user_add_to_group parsing failed"
 
 instance FromJSON GroupMemberRemove where
   parseJSON =
@@ -977,8 +978,8 @@ instance FromJSON GroupMemberRemove where
                 <*> v .: "user_name"
                 <*> v .: "user_username"
                 <*> v .: "user_id"
-            _ -> fail "user_remove_from_group parsing failed"
-        _ -> fail "user_remove_from_group parsing failed"
+            _unexpected -> fail "user_remove_from_group parsing failed"
+        _unexpected -> fail "user_remove_from_group parsing failed"
 
 instance FromJSON GroupMemberUpdate where
   parseJSON =
@@ -1000,8 +1001,8 @@ instance FromJSON GroupMemberUpdate where
                 <*> v .: "user_name"
                 <*> v .: "user_username"
                 <*> v .: "user_id"
-            _ -> fail "user_update_for_group parsing failed"
-        _ -> fail "user_update_for_group parsing failed"
+            _unexpected -> fail "user_update_for_group parsing failed"
+        _unexpected -> fail "user_update_for_group parsing failed"
 
 instance FromJSON Push where
   parseJSON =
@@ -1026,8 +1027,8 @@ instance FromJSON Push where
                 <*> v .: "repository"
                 <*> v .: "commits"
                 <*> v .: "total_commits_count"
-            _ -> fail "push parsing failed"
-        _ -> fail "push parsing failed"
+            _unexpected -> fail "push parsing failed"
+        _unexpected -> fail "push parsing failed"
 
 instance FromJSON TagPush where
   parseJSON =
@@ -1051,8 +1052,8 @@ instance FromJSON TagPush where
                 <*> v .: "repository"
                 <*> v .: "commits"
                 <*> v .: "total_commits_count"
-            _ -> fail "tag_push parsing failed"
-        _ -> fail "tag_push parsing failed"
+            _unexpected -> fail "tag_push parsing failed"
+        _unexpected -> fail "tag_push parsing failed"
 
 bodyNoPrefix :: String -> String
 bodyNoPrefix "projectEvent_name" = "name"

@@ -33,6 +33,7 @@ import GitLab.Types
 import Network.HTTP.Conduit
 import Network.HTTP.Types.Status
 import Network.HTTP.Types.URI
+import Text.Read
 
 newtype GitLabException = GitLabException String
   deriving (Eq, Show)
@@ -272,7 +273,10 @@ totalPages resp =
    in findPages hdrs
   where
     findPages [] = 1 -- error "cannot find X-Total-Pages in header"
-    findPages (("X-Total-Pages", bs) : _) = read (T.unpack (T.decodeUtf8 bs))
+    findPages (("X-Total-Pages", bs) : _) =
+      case readMaybe (T.unpack (T.decodeUtf8 bs)) of
+        Just s -> s
+        Nothing -> error "cannot find X-Total-Pages in header"
     findPages (_ : xs) = findPages xs
 
 successStatus :: Status -> Bool
