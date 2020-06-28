@@ -48,6 +48,7 @@ maintainer:     robstewart57@gmail.com
 copyright:      2020 Rob Stewart, Heriot-Watt University
 license:        BSD-3-Clause
 license-file:   LICENSE
+data-files:     data/system-hooks/*.json
 build-type:     Simple
 extra-source-files:
     README.md
