@@ -28,6 +28,7 @@ module GitLab
     module GitLab.API.Version,
     module GitLab.SystemHooks.GitLabSystemHooks,
     module GitLab.SystemHooks.Types,
+    module GitLab.SystemHooks.Rules,
   )
 where
 
@@ -48,6 +49,7 @@ import GitLab.API.Todos
 import GitLab.API.Users
 import GitLab.API.Version
 import GitLab.SystemHooks.GitLabSystemHooks
+import GitLab.SystemHooks.Rules
 import GitLab.SystemHooks.Types
 import GitLab.Types
 import Network.Connection (TLSSettings (..))
