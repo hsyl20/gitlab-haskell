@@ -22,6 +22,7 @@ import Control.Monad.IO.Class
 import Data.Typeable
 import GitLab.SystemHooks.Types
 import GitLab.Types
+import System.IO
 
 -- | Attempts to fire each rule in sequence. Reads the JSON data
 -- received from the GitLab server from standard input.
@@ -47,7 +48,11 @@ fire :: String -> Rule -> GitLab ()
 fire contents rule = do
   result <- tryFire contents rule
   when result $
-    liftIO (putStrLn ("fired: " <> labelOf rule))
+    -- liftIO (putStrLn ("fired: " <> labelOf rule))
+    --
+    -- so that it prints these to the GitLab server log file:
+    -- /var/log/gitlab/gitlab-rails/plugin.log
+    liftIO (hPutStrLn stderr ("fired: " <> labelOf rule))
   where
     labelOf :: Rule -> String
     labelOf (Match lbl _) = lbl
