@@ -21,6 +21,7 @@ module GitLab.SystemHooks.Types
     ProjectRename (..),
     ProjectTransfer (..),
     ProjectUpdate (..),
+    ProjectChanges (..),
     UserAddToTeam (..),
     UserUpdateForTeam (..),
     UserRemoveFromTeam (..),
@@ -40,6 +41,7 @@ module GitLab.SystemHooks.Types
     TagPush (..),
     ProjectEvent (..),
     RepositoryEvent (..),
+    RepositoryUpdate (..),
     CommitEvent (..),
     CommitAuthorEvent (..),
     Visibility (..),
@@ -490,6 +492,24 @@ data TagPush = TagPush
   }
   deriving (Typeable, Show, Eq)
 
+instance SystemHook RepositoryUpdate where
+  match = Match
+  matchIf = MatchIf
+
+-- | Tags have been pushed to the server.
+data RepositoryUpdate = RepositoryUpdate
+  { repositoryUpdate_event_name :: Text,
+    repositoryUpdate_user_id :: Int,
+    repositoryUpdate_user_name :: Text,
+    repositoryUpdate_user_email :: Text,
+    repositoryUpdate_user_avatar :: Text,
+    repositoryUpdate_project_id :: Int,
+    repositoryUpdate_project :: ProjectEvent,
+    repositoryUpdate_changes :: [ProjectChanges],
+    repositoryUpdate_refs :: [Text]
+  }
+  deriving (Typeable, Show, Eq)
+
 -- | A project event.
 data ProjectEvent = ProjectEvent
   { projectEvent_name :: Text,
@@ -507,6 +527,14 @@ data ProjectEvent = ProjectEvent
     projectEvent_url :: Text,
     projectEvent_ssh_url :: Text,
     projectEvent_http_url :: Text
+  }
+  deriving (Typeable, Show, Eq, Generic)
+
+-- | A project event.
+data ProjectChanges = ProjectChanges
+  { projectChanges_before :: Text,
+    projectChanges_after :: Text,
+    projectChanges_ref :: Text
   }
   deriving (Typeable, Show, Eq, Generic)
 
@@ -562,6 +590,7 @@ data ProjectAction
   | GroupMemberUpdated
   | Pushed
   | TagPushed
+  | RepositoryUpdated
   deriving (Show, Eq)
 
 -- |  Project visibility.
@@ -1055,6 +1084,27 @@ instance FromJSON TagPush where
             _unexpected -> fail "tag_push parsing failed"
         _unexpected -> fail "tag_push parsing failed"
 
+instance FromJSON RepositoryUpdate where
+  parseJSON =
+    withObject "Push" $ \v -> do
+      isProjectEvent <- v .:? "event_name"
+      case isProjectEvent of
+        Just theEvent ->
+          case theEvent of
+            RepositoryUpdated ->
+              RepositoryUpdate
+                <$> v .: "event_name"
+                <*> v .: "user_id"
+                <*> v .: "user_name"
+                <*> v .: "user_email"
+                <*> v .: "user_avatar"
+                <*> v .: "project_id"
+                <*> v .: "project"
+                <*> v .: "changes"
+                <*> v .: "refs"
+            _unexpected -> fail "repository_update parsing failed"
+        _unexpected -> fail "repository_update parsing failed"
+
 bodyNoPrefix :: String -> String
 bodyNoPrefix "projectEvent_name" = "name"
 bodyNoPrefix "projectEvent_description" = "description"
@@ -1071,6 +1121,9 @@ bodyNoPrefix "projectEvent_homepage" = "homepage"
 bodyNoPrefix "projectEvent_url" = "url"
 bodyNoPrefix "projectEvent_ssh_url" = "ssh_url"
 bodyNoPrefix "projectEvent_http_url" = "http_url"
+bodyNoPrefix "projectChanges_before" = "before"
+bodyNoPrefix "projectChanges_after" = "after"
+bodyNoPrefix "projectChanges_ref" = "ref"
 bodyNoPrefix "repositoryEvent_name" = "name"
 bodyNoPrefix "repositoryEvent_url" = "url"
 bodyNoPrefix "repositoryEvent_description" = "description"
@@ -1088,6 +1141,14 @@ bodyNoPrefix "commitAuthorEvent_email" = "email"
 bodyNoPrefix s = error s
 
 instance FromJSON ProjectEvent where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON ProjectChanges where
   parseJSON =
     genericParseJSON
       ( defaultOptions
@@ -1142,6 +1203,7 @@ instance FromJSON ProjectAction where
   parseJSON (String "user_update_for_group") = return GroupMemberUpdated
   parseJSON (String "push") = return Pushed
   parseJSON (String "tag_push") = return TagPushed
+  parseJSON (String "repository_update") = return RepositoryUpdated
   parseJSON s = error (show s)
 
 instance FromJSON Visibility where
