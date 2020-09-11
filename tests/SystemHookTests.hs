@@ -129,17 +129,17 @@ parserTests =
         "tag-push-event"
         ( readFile "data/system-hooks/tag-push.json"
             >>= \eventJson -> parseEvent eventJson @?= Just tagPushHaskell
-        )
+        ),
       -- testCase
       --   "merge-request-event"
       --   ( readFile "data/system-hooks/merge-request.json"
       --       >>= \eventJson -> parseEvent eventJson @?= Just mergeRequestHaskell
       --   ),
-      -- testCase
-      --   "repository-update-event"
-      --   ( readFile "data/system-hooks/repository-update.json"
-      --       >>= \eventJson -> parseEvent eventJson @?= Just repositoryUpdateHaskell
-      -- )
+      testCase
+        "repository-update-event"
+        ( readFile "data/system-hooks/repository-update.json"
+            >>= \eventJson -> parseEvent eventJson @?= Just repositoryUpdateHaskell
+        )
     ]
 
 matchTest :: String -> String -> Rule -> String -> Rule -> [TestTree]
@@ -261,30 +261,30 @@ receiveTests :: TestTree
 receiveTests =
   testGroup
     "GitLab system hooks receive"
-    [ testCase "1-rule-match"
-        $ runGitLabDbg
-        $ liftIO (readFile "data/system-hooks/project-created.json")
-          >>= \eventJson ->
-            receiveString
-              eventJson
-              [projectCreateRule],
-      testCase "1-rule-no-match"
-        $ runGitLabDbg
-        $ liftIO (readFile "data/system-hooks/project-created.json")
-          >>= \eventJson ->
-            receiveString
-              eventJson
-              [projectRenameRule],
+    [ testCase "1-rule-match" $
+        runGitLabDbg $
+          liftIO (readFile "data/system-hooks/project-created.json")
+            >>= \eventJson ->
+              receiveString
+                eventJson
+                [projectCreateRule],
+      testCase "1-rule-no-match" $
+        runGitLabDbg $
+          liftIO (readFile "data/system-hooks/project-created.json")
+            >>= \eventJson ->
+              receiveString
+                eventJson
+                [projectRenameRule],
       testCase
         "2-rules"
-        $ runGitLabDbg
-        $ liftIO (readFile "data/system-hooks/project-created.json")
-          >>= \eventJson ->
-            receiveString
-              eventJson
-              [ projectCreateRule,
-                projectDestroyRule
-              ]
+        $ runGitLabDbg $
+          liftIO (readFile "data/system-hooks/project-created.json")
+            >>= \eventJson ->
+              receiveString
+                eventJson
+                [ projectCreateRule,
+                  projectDestroyRule
+                ]
     ]
 
 projectCreateRule :: Rule
@@ -1389,4 +1389,18 @@ tagPushHaskell =
       tagPush_repository = RepositoryEvent {repositoryEvent_name = "Example", repositoryEvent_url = "ssh://git@example.com/jsmith/example.git", repositoryEvent_description = "", repositoryEvent_homepage = Just "http://example.com/jsmith/example", repositoryEvent_git_http_url = "http://example.com/jsmith/example.git", repositoryEvent_git_ssh_url = "git@example.com:jsmith/example.git", repositoryEvent_visibility_level = Private},
       tagPush_commits = [],
       tagPush_total_commits_count = 0
+    }
+
+repositoryUpdateHaskell :: RepositoryUpdate
+repositoryUpdateHaskell =
+  RepositoryUpdate
+    { repositoryUpdate_event_name = "repository_update",
+      repositoryUpdate_user_id = 1,
+      repositoryUpdate_user_name = "John Smith",
+      repositoryUpdate_user_email = "admin@example.com",
+      repositoryUpdate_user_avatar = "https://s.gravatar.com/avatar/d4c74594d841139328695756648b6bd6?s=8://s.gravatar.com/avatar/d4c74594d841139328695756648b6bd6?s=80",
+      repositoryUpdate_project_id = 1,
+      repositoryUpdate_project = ProjectEvent {projectEvent_name = "Example", projectEvent_description = "", projectEvent_web_url = "http://example.com/jsmith/example", projectEvent_avatar_url = Nothing, projectEvent_git_ssh_url = "git@example.com:jsmith/example.git", projectEvent_git_http_url = "http://example.com/jsmith/example.git", projectEvent_namespace = "Jsmith", projectEvent_visibility_level = Private, projectEvent_path_with_namespace = "jsmith/example", projectEvent_default_branch = "master", projectEvent_homepage = Just "http://example.com/jsmith/example", projectEvent_url = "git@example.com:jsmith/example.git", projectEvent_ssh_url = "git@example.com:jsmith/example.git", projectEvent_http_url = "http://example.com/jsmith/example.git"},
+      repositoryUpdate_changes = [ProjectChanges {projectChanges_before = "8205ea8d81ce0c6b90fbe8280d118cc9fdad6130", projectChanges_after = "4045ea7a3df38697b3730a20fb73c8bed8a3e69e", projectChanges_ref = "refs/heads/master"}],
+      repositoryUpdate_refs = ["refs/heads/master"]
     }
