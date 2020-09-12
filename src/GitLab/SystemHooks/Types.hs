@@ -45,6 +45,10 @@ module GitLab.SystemHooks.Types
     CommitEvent (..),
     CommitAuthorEvent (..),
     Visibility (..),
+    MergeRequestEvent (..),
+    ObjectAttributes (..),
+    MergeParams (..),
+    UserEvent (..),
     parseEvent,
   )
 where
@@ -544,9 +548,12 @@ data RepositoryEvent = RepositoryEvent
     repositoryEvent_url :: Text,
     repositoryEvent_description :: Text,
     repositoryEvent_homepage :: Maybe Text,
-    repositoryEvent_git_http_url :: Text,
-    repositoryEvent_git_ssh_url :: Text,
-    repositoryEvent_visibility_level :: Visibility
+    -- these three not in the merge_request event example
+    -- in the GitLab documentation. Is the merge_request documentation
+    -- out dated?
+    repositoryEvent_git_http_url :: Maybe Text,
+    repositoryEvent_git_ssh_url :: Maybe Text,
+    repositoryEvent_visibility_level :: Maybe Visibility
   }
   deriving (Typeable, Show, Eq, Generic)
 
@@ -564,6 +571,75 @@ data CommitEvent = CommitEvent
 data CommitAuthorEvent = CommitAuthorEvent
   { commitAuthorEvent_name :: Text,
     commitAuthorEvent_email :: Text
+  }
+  deriving (Typeable, Show, Eq, Generic)
+
+instance SystemHook MergeRequestEvent where
+  match = Match
+  matchIf = MatchIf
+
+-- | Merge request (named so, since 'MergeRequest' type already used
+-- in GitLab.Types.
+data MergeRequestEvent = MergeRequestEvent
+  { mergeRequest_object_kind :: Text,
+    mergeRequest_user :: UserEvent,
+    mergeRequest_project :: ProjectEvent,
+    mergeRequest_object_attributes :: ObjectAttributes,
+    mergeRequest_labels :: Maybe Text,
+    mergeRequest_repository :: RepositoryEvent
+  }
+  deriving (Typeable, Show, Eq, Generic)
+
+data ObjectAttributes = ObjectAttributes
+  { objectAttributes_id :: Int,
+    objectAttributes_target_branch :: Text,
+    objectAttributes_source_branch :: Text,
+    objectAttributes_source_project_id :: Int,
+    objectAttributes_author_id :: Int,
+    objectAttributes_assignee_id :: Int,
+    objectAttributes_title :: Text,
+    objectAttributes_created_at :: Text,
+    objectAttributes_updated_at :: Text,
+    objectAttributes_milestone_id :: Maybe Int,
+    objectAttributes_state :: Text,
+    objectAttributes_merge_status :: Text,
+    objectAttributes_target_project_id :: Int,
+    objectAttributes_iid :: Int,
+    objectAttributes_description :: Text,
+    objectAttributes_updated_by_id :: Maybe Int,
+    objectAttributes_merge_error :: Maybe Text,
+    objectAttributes_merge_params :: MergeParams,
+    objectAttributes_merge_when_pipeline_succeeds :: Bool,
+    objectAttributes_merge_user_id :: Maybe Int,
+    objectAttributes_merge_commit_sha :: Maybe Text,
+    objectAttributes_deleted_at :: Maybe Text,
+    objectAttributes_in_progress_merge_commit_sha :: Maybe Text,
+    objectAttributes_lock_version :: Maybe Int,
+    objectAttributes_time_estimate :: Int,
+    objectAttributes_last_edited_at :: Text,
+    objectAttributes_last_edited_by_id :: Int,
+    objectAttributes_head_pipeline_id :: Int,
+    objectAttributes_ref_fetched :: Bool,
+    objectAttributes_merge_jid :: Maybe Int,
+    objectAttributes_source :: ProjectEvent,
+    objectAttributes_target :: ProjectEvent,
+    objectAttributes_last_commit :: CommitEvent,
+    objectAttributes_work_in_progress :: Bool,
+    objectAttributes_total_time_spent :: Int,
+    objectAttributes_human_total_time_spent :: Maybe Int,
+    objectAttributes_human_time_estimate :: Maybe Int
+  }
+  deriving (Typeable, Show, Eq, Generic)
+
+data MergeParams = MergeParams
+  { mergeParams_force_remove_source_branch :: Text
+  }
+  deriving (Typeable, Show, Eq, Generic)
+
+data UserEvent = UserEvent
+  { userEvent_name :: Text,
+    userEvent_username :: Text,
+    userEvent_avatar_url :: Text
   }
   deriving (Typeable, Show, Eq, Generic)
 
@@ -591,6 +667,7 @@ data ProjectAction
   | Pushed
   | TagPushed
   | RepositoryUpdated
+  | MergeRequested
   deriving (Show, Eq)
 
 -- |  Project visibility.
@@ -1061,7 +1138,7 @@ instance FromJSON Push where
 
 instance FromJSON TagPush where
   parseJSON =
-    withObject "Push" $ \v -> do
+    withObject "TagPush" $ \v -> do
       isProjectEvent <- v .:? "event_name"
       case isProjectEvent of
         Just theEvent ->
@@ -1086,7 +1163,7 @@ instance FromJSON TagPush where
 
 instance FromJSON RepositoryUpdate where
   parseJSON =
-    withObject "Push" $ \v -> do
+    withObject "RepositoryUpdate" $ \v -> do
       isProjectEvent <- v .:? "event_name"
       case isProjectEvent of
         Just theEvent ->
@@ -1104,6 +1181,26 @@ instance FromJSON RepositoryUpdate where
                 <*> v .: "refs"
             _unexpected -> fail "repository_update parsing failed"
         _unexpected -> fail "repository_update parsing failed"
+
+instance FromJSON MergeRequestEvent where
+  parseJSON =
+    withObject "MergeRequestEvent" $ \v -> do
+      -- Note: it's `event_name` in all other examples.
+      -- Bug in GitLab system hooks documentation?
+      isProjectEvent <- v .:? "object_kind"
+      case isProjectEvent of
+        Just theEvent ->
+          case theEvent of
+            MergeRequested ->
+              MergeRequestEvent
+                <$> v .: "object_kind"
+                <*> v .: "user"
+                <*> v .: "project"
+                <*> v .: "object_attributes"
+                <*> v .: "labels"
+                <*> v .: "repository"
+            _unexpected -> fail "merge_request parsing failed"
+        _unexpected -> fail "merge_request parsing failed"
 
 bodyNoPrefix :: String -> String
 bodyNoPrefix "projectEvent_name" = "name"
@@ -1138,7 +1235,48 @@ bodyNoPrefix "commitEvent_url" = "url"
 bodyNoPrefix "commitEvent_author" = "author"
 bodyNoPrefix "commitAuthorEvent_name" = "name"
 bodyNoPrefix "commitAuthorEvent_email" = "email"
-bodyNoPrefix s = error s
+bodyNoPrefix "mergeParams_force_remove_source_branch" = "force_remove_source_branch"
+bodyNoPrefix "userEvent_name" = "name"
+bodyNoPrefix "userEvent_username" = "username"
+bodyNoPrefix "userEvent_avatar_url" = "avatar_url"
+bodyNoPrefix "objectAttributes_id" = "id"
+bodyNoPrefix "objectAttributes_target_branch" = "target_branch"
+bodyNoPrefix "objectAttributes_source_branch" = "source_branch"
+bodyNoPrefix "objectAttributes_source_project_id" = "source_project_id"
+bodyNoPrefix "objectAttributes_author_id" = "author_id"
+bodyNoPrefix "objectAttributes_assignee_id" = "assignee_id"
+bodyNoPrefix "objectAttributes_title" = "title"
+bodyNoPrefix "objectAttributes_created_at" = "created_at"
+bodyNoPrefix "objectAttributes_updated_at" = "updated_at"
+bodyNoPrefix "objectAttributes_milestone_id" = "milestone_id"
+bodyNoPrefix "objectAttributes_state" = "state"
+bodyNoPrefix "objectAttributes_merge_status" = "merge_status"
+bodyNoPrefix "objectAttributes_target_project_id" = "target_project_id"
+bodyNoPrefix "objectAttributes_iid" = "iid"
+bodyNoPrefix "objectAttributes_description" = "description"
+bodyNoPrefix "objectAttributes_updated_by_id" = "updated_by_id"
+bodyNoPrefix "objectAttributes_merge_error" = "merge_error"
+bodyNoPrefix "objectAttributes_merge_params" = "merge_params"
+bodyNoPrefix "objectAttributes_merge_when_pipeline_succeeds" = "merge_when_pipeline_succeeds"
+bodyNoPrefix "objectAttributes_merge_user_id" = "merge_user_id"
+bodyNoPrefix "objectAttributes_merge_commit_sha" = "merge_commit_sha"
+bodyNoPrefix "objectAttributes_deleted_at" = "deleted_at"
+bodyNoPrefix "objectAttributes_in_progress_merge_commit_sha" = "in_progress_merge_commit_sha"
+bodyNoPrefix "objectAttributes_lock_version" = "lock_version"
+bodyNoPrefix "objectAttributes_time_estimate" = "time_estimate"
+bodyNoPrefix "objectAttributes_last_edited_at" = "last_edited_at"
+bodyNoPrefix "objectAttributes_last_edited_by_id" = "last_edited_by_id"
+bodyNoPrefix "objectAttributes_head_pipeline_id" = "head_pipeline_id"
+bodyNoPrefix "objectAttributes_ref_fetched" = "ref_fetched"
+bodyNoPrefix "objectAttributes_merge_jid" = "merge_jid"
+bodyNoPrefix "objectAttributes_source" = "source"
+bodyNoPrefix "objectAttributes_target" = "target"
+bodyNoPrefix "objectAttributes_last_commit" = "last_commit"
+bodyNoPrefix "objectAttributes_work_in_progress" = "work_in_progress"
+bodyNoPrefix "objectAttributes_total_time_spent" = "total_time_spent"
+bodyNoPrefix "objectAttributes_human_total_time_spent" = "human_total_time_spent"
+bodyNoPrefix "objectAttributes_human_time_estimate" = "human_time_estimate"
+bodyNoPrefix s = error ("uexpected JSON field prefix: " <> s)
 
 instance FromJSON ProjectEvent where
   parseJSON =
@@ -1180,6 +1318,30 @@ instance FromJSON CommitAuthorEvent where
           }
       )
 
+instance FromJSON ObjectAttributes where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON MergeParams where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON UserEvent where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
 instance FromJSON ProjectAction where
   parseJSON (String "project_create") = return ProjectCreated
   parseJSON (String "project_destroy") = return ProjectDestroyed
@@ -1204,7 +1366,8 @@ instance FromJSON ProjectAction where
   parseJSON (String "push") = return Pushed
   parseJSON (String "tag_push") = return TagPushed
   parseJSON (String "repository_update") = return RepositoryUpdated
-  parseJSON s = error (show s)
+  parseJSON (String "merge_request") = return MergeRequested
+  parseJSON s = error ("unexpected system hook event: " <> show s)
 
 instance FromJSON Visibility where
   parseJSON (String "public") = return Public
