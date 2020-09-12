@@ -22,7 +22,6 @@ import Control.Monad.IO.Class
 import Data.Typeable
 import GitLab.SystemHooks.Types
 import GitLab.Types
-import System.IO
 
 -- | Attempts to fire each rule in sequence. Reads the JSON data
 -- received from the GitLab server from standard input.
@@ -150,6 +149,10 @@ tryFire contents (Match _ f) = do
       (Just (\_ -> return True))
       (cast f :: Maybe (TagPush -> GitLab ()))
       (parseEvent contents :: Maybe TagPush)
+    `orElse` fireIf'
+      (Just (\_ -> return True))
+      (cast f :: Maybe (RepositoryUpdate -> GitLab ()))
+      (parseEvent contents :: Maybe RepositoryUpdate)
 tryFire contents (MatchIf _ predF f) = do
   fireIf'
     (cast predF :: Maybe (ProjectCreate -> GitLab Bool))
@@ -243,6 +246,10 @@ tryFire contents (MatchIf _ predF f) = do
       (cast predF :: Maybe (TagPush -> GitLab Bool))
       (cast f :: Maybe (TagPush -> GitLab ()))
       (parseEvent contents :: Maybe TagPush)
+    `orElse` fireIf'
+      (cast predF :: Maybe (RepositoryUpdate -> GitLab Bool))
+      (cast f :: Maybe (RepositoryUpdate -> GitLab ()))
+      (parseEvent contents :: Maybe RepositoryUpdate)
 
 fireIf' :: (Typeable a, Show a) => Maybe (a -> GitLab Bool) -> Maybe (a -> GitLab ()) -> Maybe a -> GitLab Bool
 fireIf' castPred castF parsed = do
