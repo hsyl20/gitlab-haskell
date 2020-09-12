@@ -7,15 +7,40 @@
 -- License     : BSD3
 -- Maintainer  : robstewart57@gmail.com
 -- Stability   : stable
-module GitLab.SystemHooks.Rules (ruleAddMembers) where
+module GitLab.SystemHooks.Rules (ruleAddMembers, ruleAddNewUserToGroups) where
 
 import Control.Monad
 import Data.Text
+import GitLab.API.Groups
 import GitLab.API.Members
 import GitLab.API.Projects
 import GitLab.API.Users
 import GitLab.SystemHooks.Types
 import GitLab.Types
+
+ruleAddNewUserToGroups ::
+  -- | rule label
+  String ->
+  -- | list of (non registered) usernames
+  [Text] ->
+  -- | list of groups to add new user to
+  [Text] ->
+  Rule
+ruleAddNewUserToGroups lbl nonRegisteredUsernames groupNames =
+  matchIf
+    lbl
+    ( \event@UserCreate {} -> do
+        return (userCreate_username event `elem` nonRegisteredUsernames)
+    )
+    ( \event@UserCreate {} -> do
+        mapM_
+          ( \groupName ->
+              -- will return value of type `Left Status` if user already
+              -- member of the group, `void` silently ignores any outcome.
+              addUserToGroup' groupName Reporter (userCreate_user_id event)
+          )
+          groupNames
+    )
 
 ruleAddMembers ::
   -- | rule label
