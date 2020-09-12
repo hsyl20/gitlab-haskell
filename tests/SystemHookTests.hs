@@ -173,14 +173,14 @@ matchIfTest lbl jsonFilename yesFire noFire =
         ( liftIO (readFile ("data/system-hooks/" <> jsonFilename))
             >>= \eventJson -> tryFire eventJson yesFire
         )
-        @? "project-create-fireIf-yes failed",
+        @? (lbl <> "-fireIf-yes failed"),
     testCase (lbl <> "-no") $
       not
         <$> runGitLabDbg
           ( liftIO (readFile ("data/system-hooks/" <> jsonFilename))
               >>= \eventJson -> tryFire eventJson noFire
           )
-        @? "project-create-fireIf-no failed"
+        @? (lbl <> "-fireIf-no failed")
   ]
 
 -- [ testCase lbl $
@@ -230,6 +230,7 @@ matchTests =
       <> matchTest "group-member-update" "group-member-updated.json" groupMemberUpdateRule "project-created.json" projectCreateRule
       <> matchTest "push" "push.json" pushRule "project-created.json" projectCreateRule
       <> matchTest "tag-push" "tag-push.json" tagPushRule "project-created.json" projectCreateRule
+      <> matchTest "repository-update" "repository-update.json" repositoryUpdateRule "project-created.json" projectCreateRule
 
 matchIfTests :: TestTree
 matchIfTests =
@@ -256,6 +257,7 @@ matchIfTests =
       <> matchIfTest "group-member-update" "group-member-updated.json" groupMemberUpdateIfRuleYes groupMemberUpdateIfRuleNo
       <> matchIfTest "push" "push.json" pushIfRuleYes pushIfRuleNo
       <> matchIfTest "tag-push" "tag-push.json" tagPushIfRuleYes tagPushIfRuleNo
+      <> matchIfTest "repository-update" "repository-update.json" repositoryUpdateIfRuleYes repositoryUpdateIfRuleNo
 
 receiveTests :: TestTree
 receiveTests =
@@ -1058,6 +1060,36 @@ tagPushIfRuleNo =
         return (tagPush_ref event == "refs/tags/v2.0.0")
     )
     ( \TagPush {} -> do
+        return ()
+    )
+
+repositoryUpdateRule :: Rule
+repositoryUpdateRule =
+  match
+    "repositoryUpdate rule"
+    ( \RepositoryUpdate {} -> do
+        return ()
+    )
+
+repositoryUpdateIfRuleYes :: Rule
+repositoryUpdateIfRuleYes =
+  matchIf
+    "repositoryUpdate rule-if yes"
+    ( \event@RepositoryUpdate {} -> do
+        return (repositoryUpdate_refs event == ["refs/heads/master"])
+    )
+    ( \RepositoryUpdate {} -> do
+        return ()
+    )
+
+repositoryUpdateIfRuleNo :: Rule
+repositoryUpdateIfRuleNo =
+  matchIf
+    "repositoryUpdate rule-if no"
+    ( \event@RepositoryUpdate {} -> do
+        return (repositoryUpdate_refs event == ["refs/heads/branch-1"])
+    )
+    ( \RepositoryUpdate {} -> do
         return ()
     )
 
