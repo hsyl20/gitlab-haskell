@@ -48,11 +48,7 @@ fire :: String -> Rule -> GitLab ()
 fire contents rule = do
   result <- tryFire contents rule
   when result $
-    -- liftIO (putStrLn ("fired: " <> labelOf rule))
-    --
-    -- so that it prints these to the GitLab server log file:
-    -- /var/log/gitlab/gitlab-rails/plugin.log
-    liftIO (hPutStrLn stderr ("fired: " <> labelOf rule))
+    liftIO (putStrLn ("fired: " <> labelOf rule))
   where
     labelOf :: Rule -> String
     labelOf (Match lbl _) = lbl
