@@ -130,11 +130,11 @@ parserTests =
         ( readFile "data/system-hooks/tag-push.json"
             >>= \eventJson -> parseEvent eventJson @?= Just tagPushHaskell
         ),
-      -- testCase
-      --   "merge-request-event"
-      --   ( readFile "data/system-hooks/merge-request.json"
-      --       >>= \eventJson -> parseEvent eventJson @?= Just mergeRequestHaskell
-      --   ),
+      testCase
+        "merge-request-event"
+        ( readFile "data/system-hooks/merge-request.json"
+            >>= \eventJson -> parseEvent eventJson @?= Just mergeRequestHaskell
+        ),
       testCase
         "repository-update-event"
         ( readFile "data/system-hooks/repository-update.json"
@@ -231,6 +231,7 @@ matchTests =
       <> matchTest "push" "push.json" pushRule "project-created.json" projectCreateRule
       <> matchTest "tag-push" "tag-push.json" tagPushRule "project-created.json" projectCreateRule
       <> matchTest "repository-update" "repository-update.json" repositoryUpdateRule "project-created.json" projectCreateRule
+      <> matchTest "merge-request" "merge-request.json" mergeRequestRule "project-created.json" projectCreateRule
 
 matchIfTests :: TestTree
 matchIfTests =
@@ -258,6 +259,7 @@ matchIfTests =
       <> matchIfTest "push" "push.json" pushIfRuleYes pushIfRuleNo
       <> matchIfTest "tag-push" "tag-push.json" tagPushIfRuleYes tagPushIfRuleNo
       <> matchIfTest "repository-update" "repository-update.json" repositoryUpdateIfRuleYes repositoryUpdateIfRuleNo
+      <> matchIfTest "merge-request" "merge-request.json" mergeRequestIfRuleYes mergeRequestIfRuleNo
 
 receiveTests :: TestTree
 receiveTests =
@@ -1093,6 +1095,36 @@ repositoryUpdateIfRuleNo =
         return ()
     )
 
+mergeRequestRule :: Rule
+mergeRequestRule =
+  match
+    "mergeRequest rule"
+    ( \MergeRequestEvent {} -> do
+        return ()
+    )
+
+mergeRequestIfRuleYes :: Rule
+mergeRequestIfRuleYes =
+  matchIf
+    "mergeRequest rule-if yes"
+    ( \event@MergeRequestEvent {} -> do
+        return (userEvent_name (mergeRequest_user event) == "Administrator")
+    )
+    ( \MergeRequestEvent {} -> do
+        return ()
+    )
+
+mergeRequestIfRuleNo :: Rule
+mergeRequestIfRuleNo =
+  matchIf
+    "mergeRequest rule-if no"
+    ( \event@MergeRequestEvent {} -> do
+        return (userEvent_name (mergeRequest_user event) == "joe")
+    )
+    ( \MergeRequestEvent {} -> do
+        return ()
+    )
+
 projectCreatedHaskell :: ProjectCreate
 projectCreatedHaskell =
   ProjectCreate
@@ -1400,7 +1432,7 @@ pushHaskell =
       push_user_avatar = "https://s.gravatar.com/avatar/d4c74594d841139328695756648b6bd6?s=8://s.gravatar.com/avatar/d4c74594d841139328695756648b6bd6?s=80",
       push_project_id = 15,
       push_project = ProjectEvent {projectEvent_name = "Diaspora", projectEvent_description = "", projectEvent_web_url = "http://example.com/mike/diaspora", projectEvent_avatar_url = Nothing, projectEvent_git_ssh_url = "git@example.com:mike/diaspora.git", projectEvent_git_http_url = "http://example.com/mike/diaspora.git", projectEvent_namespace = "Mike", projectEvent_visibility_level = Private, projectEvent_path_with_namespace = "mike/diaspora", projectEvent_default_branch = "master", projectEvent_homepage = Just "http://example.com/mike/diaspora", projectEvent_url = "git@example.com:mike/diaspora.git", projectEvent_ssh_url = "git@example.com:mike/diaspora.git", projectEvent_http_url = "http://example.com/mike/diaspora.git"},
-      push_repository = RepositoryEvent {repositoryEvent_name = "Diaspora", repositoryEvent_url = "git@example.com:mike/diaspora.git", repositoryEvent_description = "", repositoryEvent_homepage = Just "http://example.com/mike/diaspora", repositoryEvent_git_http_url = "http://example.com/mike/diaspora.git", repositoryEvent_git_ssh_url = "git@example.com:mike/diaspora.git", repositoryEvent_visibility_level = Private},
+      push_repository = RepositoryEvent {repositoryEvent_name = "Diaspora", repositoryEvent_url = "git@example.com:mike/diaspora.git", repositoryEvent_description = "", repositoryEvent_homepage = Just "http://example.com/mike/diaspora", repositoryEvent_git_http_url = Just "http://example.com/mike/diaspora.git", repositoryEvent_git_ssh_url = Just "git@example.com:mike/diaspora.git", repositoryEvent_visibility_level = Just Private},
       push_commits = [CommitEvent {commitEvent_id = "c5feabde2d8cd023215af4d2ceeb7a64839fc428", commitEvent_message = "Add simple search to projects in public area", commitEvent_timestamp = "2013-05-13T18:18:08+00:00", commitEvent_url = "https://dev.gitlab.org/gitlab/gitlabhq/commit/c5feabde2d8cd023215af4d2ceeb7a64839fc428", commitEvent_author = CommitAuthorEvent {commitAuthorEvent_name = "Example User", commitAuthorEvent_email = "user@example.com"}}],
       push_total_commits_count = 1
     }
@@ -1418,7 +1450,7 @@ tagPushHaskell =
       tagPush_user_avatar = "https://s.gravatar.com/avatar/d4c74594d841139328695756648b6bd6?s=8://s.gravatar.com/avatar/d4c74594d841139328695756648b6bd6?s=80",
       tagPush_project_id = 1,
       tagPush_project = ProjectEvent {projectEvent_name = "Example", projectEvent_description = "", projectEvent_web_url = "http://example.com/jsmith/example", projectEvent_avatar_url = Nothing, projectEvent_git_ssh_url = "git@example.com:jsmith/example.git", projectEvent_git_http_url = "http://example.com/jsmith/example.git", projectEvent_namespace = "Jsmith", projectEvent_visibility_level = Private, projectEvent_path_with_namespace = "jsmith/example", projectEvent_default_branch = "master", projectEvent_homepage = Just "http://example.com/jsmith/example", projectEvent_url = "git@example.com:jsmith/example.git", projectEvent_ssh_url = "git@example.com:jsmith/example.git", projectEvent_http_url = "http://example.com/jsmith/example.git"},
-      tagPush_repository = RepositoryEvent {repositoryEvent_name = "Example", repositoryEvent_url = "ssh://git@example.com/jsmith/example.git", repositoryEvent_description = "", repositoryEvent_homepage = Just "http://example.com/jsmith/example", repositoryEvent_git_http_url = "http://example.com/jsmith/example.git", repositoryEvent_git_ssh_url = "git@example.com:jsmith/example.git", repositoryEvent_visibility_level = Private},
+      tagPush_repository = RepositoryEvent {repositoryEvent_name = "Example", repositoryEvent_url = "ssh://git@example.com/jsmith/example.git", repositoryEvent_description = "", repositoryEvent_homepage = Just "http://example.com/jsmith/example", repositoryEvent_git_http_url = Just "http://example.com/jsmith/example.git", repositoryEvent_git_ssh_url = Just "git@example.com:jsmith/example.git", repositoryEvent_visibility_level = Just Private},
       tagPush_commits = [],
       tagPush_total_commits_count = 0
     }
@@ -1435,4 +1467,15 @@ repositoryUpdateHaskell =
       repositoryUpdate_project = ProjectEvent {projectEvent_name = "Example", projectEvent_description = "", projectEvent_web_url = "http://example.com/jsmith/example", projectEvent_avatar_url = Nothing, projectEvent_git_ssh_url = "git@example.com:jsmith/example.git", projectEvent_git_http_url = "http://example.com/jsmith/example.git", projectEvent_namespace = "Jsmith", projectEvent_visibility_level = Private, projectEvent_path_with_namespace = "jsmith/example", projectEvent_default_branch = "master", projectEvent_homepage = Just "http://example.com/jsmith/example", projectEvent_url = "git@example.com:jsmith/example.git", projectEvent_ssh_url = "git@example.com:jsmith/example.git", projectEvent_http_url = "http://example.com/jsmith/example.git"},
       repositoryUpdate_changes = [ProjectChanges {projectChanges_before = "8205ea8d81ce0c6b90fbe8280d118cc9fdad6130", projectChanges_after = "4045ea7a3df38697b3730a20fb73c8bed8a3e69e", projectChanges_ref = "refs/heads/master"}],
       repositoryUpdate_refs = ["refs/heads/master"]
+    }
+
+mergeRequestHaskell :: MergeRequestEvent
+mergeRequestHaskell =
+  MergeRequestEvent
+    { mergeRequest_object_kind = "merge_request",
+      mergeRequest_user = UserEvent {userEvent_name = "Administrator", userEvent_username = "root", userEvent_avatar_url = "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=80&d=identicon"},
+      mergeRequest_project = ProjectEvent {projectEvent_name = "Example", projectEvent_description = "", projectEvent_web_url = "http://example.com/jsmith/example", projectEvent_avatar_url = Nothing, projectEvent_git_ssh_url = "git@example.com:jsmith/example.git", projectEvent_git_http_url = "http://example.com/jsmith/example.git", projectEvent_namespace = "Jsmith", projectEvent_visibility_level = Private, projectEvent_path_with_namespace = "jsmith/example", projectEvent_default_branch = "master", projectEvent_homepage = Just "http://example.com/jsmith/example", projectEvent_url = "git@example.com:jsmith/example.git", projectEvent_ssh_url = "git@example.com:jsmith/example.git", projectEvent_http_url = "http://example.com/jsmith/example.git"},
+      mergeRequest_object_attributes = ObjectAttributes {objectAttributes_id = 90, objectAttributes_target_branch = "master", objectAttributes_source_branch = "ms-viewport", objectAttributes_source_project_id = 14, objectAttributes_author_id = 51, objectAttributes_assignee_id = 6, objectAttributes_title = "MS-Viewport", objectAttributes_created_at = "2017-09-20T08:31:45.944Z", objectAttributes_updated_at = "2017-09-28T12:23:42.365Z", objectAttributes_milestone_id = Nothing, objectAttributes_state = "opened", objectAttributes_merge_status = "unchecked", objectAttributes_target_project_id = 14, objectAttributes_iid = 1, objectAttributes_description = "", objectAttributes_updated_by_id = Just 1, objectAttributes_merge_error = Nothing, objectAttributes_merge_params = MergeParams {mergeParams_force_remove_source_branch = "0"}, objectAttributes_merge_when_pipeline_succeeds = False, objectAttributes_merge_user_id = Nothing, objectAttributes_merge_commit_sha = Nothing, objectAttributes_deleted_at = Nothing, objectAttributes_in_progress_merge_commit_sha = Nothing, objectAttributes_lock_version = Just 5, objectAttributes_time_estimate = 0, objectAttributes_last_edited_at = "2017-09-27T12:43:37.558Z", objectAttributes_last_edited_by_id = 1, objectAttributes_head_pipeline_id = 61, objectAttributes_ref_fetched = True, objectAttributes_merge_jid = Nothing, objectAttributes_source = ProjectEvent {projectEvent_name = "Awesome Project", projectEvent_description = "", projectEvent_web_url = "http://example.com/awesome_space/awesome_project", projectEvent_avatar_url = Nothing, projectEvent_git_ssh_url = "git@example.com:awesome_space/awesome_project.git", projectEvent_git_http_url = "http://example.com/awesome_space/awesome_project.git", projectEvent_namespace = "root", projectEvent_visibility_level = Private, projectEvent_path_with_namespace = "awesome_space/awesome_project", projectEvent_default_branch = "master", projectEvent_homepage = Just "http://example.com/awesome_space/awesome_project", projectEvent_url = "http://example.com/awesome_space/awesome_project.git", projectEvent_ssh_url = "git@example.com:awesome_space/awesome_project.git", projectEvent_http_url = "http://example.com/awesome_space/awesome_project.git"}, objectAttributes_target = ProjectEvent {projectEvent_name = "Awesome Project", projectEvent_description = "Aut reprehenderit ut est.", projectEvent_web_url = "http://example.com/awesome_space/awesome_project", projectEvent_avatar_url = Nothing, projectEvent_git_ssh_url = "git@example.com:awesome_space/awesome_project.git", projectEvent_git_http_url = "http://example.com/awesome_space/awesome_project.git", projectEvent_namespace = "Awesome Space", projectEvent_visibility_level = Private, projectEvent_path_with_namespace = "awesome_space/awesome_project", projectEvent_default_branch = "master", projectEvent_homepage = Just "http://example.com/awesome_space/awesome_project", projectEvent_url = "http://example.com/awesome_space/awesome_project.git", projectEvent_ssh_url = "git@example.com:awesome_space/awesome_project.git", projectEvent_http_url = "http://example.com/awesome_space/awesome_project.git"}, objectAttributes_last_commit = CommitEvent {commitEvent_id = "ba3e0d8ff79c80d5b0bbb4f3e2e343e0aaa662b7", commitEvent_message = "fixed readme", commitEvent_timestamp = "2017-09-26T16:12:57Z", commitEvent_url = "http://example.com/awesome_space/awesome_project/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7", commitEvent_author = CommitAuthorEvent {commitAuthorEvent_name = "GitLab dev user", commitAuthorEvent_email = "gitlabdev@dv6700.(none)"}}, objectAttributes_work_in_progress = False, objectAttributes_total_time_spent = 0, objectAttributes_human_total_time_spent = Nothing, objectAttributes_human_time_estimate = Nothing},
+      mergeRequest_labels = Nothing,
+      mergeRequest_repository = RepositoryEvent {repositoryEvent_name = "git-gpg-test", repositoryEvent_url = "git@example.com:awesome_space/awesome_project.git", repositoryEvent_description = "", repositoryEvent_homepage = Just "http://example.com/awesome_space/awesome_project", repositoryEvent_git_http_url = Nothing, repositoryEvent_git_ssh_url = Nothing, repositoryEvent_visibility_level = Nothing}
     }
