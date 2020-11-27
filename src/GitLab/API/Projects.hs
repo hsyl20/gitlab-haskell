@@ -226,8 +226,8 @@ projectDiffs' projId commitSha =
         <> "/diff/"
     )
 
--- | share a project with a group.
-shareProjectWithGroup ::
+-- | add a group to a project.
+addGroupToProject ::
   -- | group ID
   Int ->
   -- | project ID
@@ -235,7 +235,7 @@ shareProjectWithGroup ::
   -- | level of access granted
   AccessLevel ->
   GitLab (Either Status GroupShare)
-shareProjectWithGroup groupId projectId access =
+addGroupToProject groupId projectId access =
   gitlabPost addr dataBody
   where
     dataBody :: Text
