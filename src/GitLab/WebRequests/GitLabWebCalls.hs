@@ -14,6 +14,7 @@ module GitLab.WebRequests.GitLabWebCalls
     -- gitlabWithAttrsOneUnsafe,
     gitlabPost,
     gitlabPut,
+    gitlabDelete,
     gitlabReqText,
     gitlabReqByteString,
   )
@@ -23,6 +24,7 @@ import qualified Control.Exception as Exception
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader
 import Data.Aeson
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Data.ByteString.Lazy.Char8 as C
 import Data.Either
@@ -105,6 +107,29 @@ gitlabPut urlPath dataBody = do
               Left $
                 mkStatus 409 "unable to parse PUT response"
         )
+    else return (Left (responseStatus resp))
+
+gitlabDelete ::
+  -- | the URL to post to
+  Text ->
+  GitLab (Either Status ())
+gitlabDelete urlPath = do
+  cfg <- serverCfg <$> ask
+  manager <- httpManager <$> ask
+  let url' = url cfg <> "/api/v4" <> urlPath
+  let request' = parseRequest_ (T.unpack url')
+      request =
+        request'
+          { method = "DELETE",
+            requestHeaders =
+              [ ("PRIVATE-TOKEN", T.encodeUtf8 (token cfg)),
+                ("content-type", "application/json")
+              ],
+            requestBody = RequestBodyBS BS.empty
+          }
+  resp <- liftIO $ tryGitLab 0 request (retries cfg) manager Nothing
+  if successStatus (responseStatus resp)
+    then return (Right ())
     else return (Left (responseStatus resp))
 
 tryGitLab ::
