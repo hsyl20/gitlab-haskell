@@ -113,3 +113,27 @@ acceptMergeRequest' projectId mergeRequestIid = gitlabPost addr dataBody
         "/projects/" <> show projectId <> "/merge_requests/"
           <> show mergeRequestIid
           <> "/merge"
+
+-- | Deletes a merge request. Only for admins and project owners.
+deleteMergeRequest ::
+  -- | project
+  Project ->
+  -- | merge request IID
+  Int ->
+  GitLab (Either Status ())
+deleteMergeRequest project =
+  deleteMergeRequest' (project_id project)
+
+-- | Deletes a merge request. Only for admins and project owners.
+deleteMergeRequest' ::
+  -- | project ID
+  Int ->
+  -- | merge request IID
+  Int ->
+  GitLab (Either Status ())
+deleteMergeRequest' projectId mergeRequestIid = gitlabDelete addr
+  where
+    addr =
+      T.pack $
+        "/projects/" <> show projectId <> "/merge_requests/"
+          <> show mergeRequestIid
