@@ -63,7 +63,7 @@ newIssue ::
   Text ->
   -- | issue description
   Text ->
-  GitLab (Either Status Issue)
+  GitLab (Either Status (Maybe Issue))
 newIssue project =
   newIssue' (project_id project)
 
@@ -75,7 +75,7 @@ newIssue' ::
   Text ->
   -- | issue description
   Text ->
-  GitLab (Either Status Issue)
+  GitLab (Either Status (Maybe Issue))
 newIssue' projectId issueTitle issueDescription =
   gitlabPost addr dataBody
   where

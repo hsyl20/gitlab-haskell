@@ -51,7 +51,7 @@ gitlabPost ::
   Text ->
   -- | the data to post
   Text ->
-  GitLab (Either Status b)
+  GitLab (Either Status (Maybe b))
 gitlabPost urlPath dataBody = do
   cfg <- serverCfg <$> ask
   manager <- httpManager <$> ask
@@ -69,10 +69,11 @@ gitlabPost urlPath dataBody = do
     then
       return
         ( case parseBSOne (responseBody resp) of
-            Just x -> Right x
-            Nothing ->
-              Left $
-                mkStatus 409 "unable to parse POST response"
+            Just x -> Right (Just x)
+            Nothing -> Right Nothing
+            -- Nothing ->
+            --   Left $
+            --     mkStatus 409 "unable to parse POST response"
         )
     else return (Left (responseStatus resp))
 

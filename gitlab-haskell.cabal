@@ -75,6 +75,7 @@ library
                 , GitLab.API.RepositoryFiles
                 , GitLab.API.Todos
                 , GitLab.API.Version
+                , GitLab.API.Notes
                 , GitLab.SystemHooks.Types
                 , GitLab.SystemHooks.GitLabSystemHooks
                 , GitLab.SystemHooks.Rules

@@ -49,7 +49,7 @@ addAllUsersToGroup ::
   Text ->
   -- | level of access granted
   AccessLevel ->
-  GitLab [Either Status Member]
+  GitLab [Either Status (Maybe Member)]
 addAllUsersToGroup groupName access = do
   allRegisteredUsers <- allUsers
   let allUserIds = map user_username allRegisteredUsers
@@ -63,7 +63,7 @@ addUserToGroup ::
   AccessLevel ->
   -- | the user
   User ->
-  GitLab (Either Status Member)
+  GitLab (Either Status (Maybe Member))
 addUserToGroup groupName access usr =
   addUserToGroup' groupName access (user_id usr)
 
@@ -75,7 +75,7 @@ addUserToGroup' ::
   AccessLevel ->
   -- | user ID
   Int ->
-  GitLab (Either Status Member)
+  GitLab (Either Status (Maybe Member))
 addUserToGroup' groupName access userId = do
   attempt <- groupsWithNameOrPath groupName
   case attempt of
@@ -103,7 +103,7 @@ addUsersToGroup ::
   AccessLevel ->
   -- | list of usernames to be added to the group
   [User] ->
-  GitLab [Either Status Member]
+  GitLab [Either Status (Maybe Member)]
 addUsersToGroup groupName access =
   mapM (addUserToGroup groupName access)
 
@@ -115,7 +115,7 @@ addUsersToGroup' ::
   AccessLevel ->
   -- | list of usernames to be added to the group
   [Text] ->
-  GitLab [Either Status Member]
+  GitLab [Either Status (Maybe Member)]
 addUsersToGroup' groupName access usernames = do
   users <- catMaybes <$> mapM searchUser usernames
   mapM (addUserToGroup' groupName access . user_id) users

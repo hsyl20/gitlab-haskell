@@ -26,6 +26,7 @@ module GitLab
     module GitLab.API.RepositoryFiles,
     module GitLab.API.Todos,
     module GitLab.API.Version,
+    module GitLab.API.Notes,
     module GitLab.SystemHooks.GitLabSystemHooks,
     module GitLab.SystemHooks.Types,
     module GitLab.SystemHooks.Rules,
@@ -41,6 +42,7 @@ import GitLab.API.Issues
 import GitLab.API.Jobs
 import GitLab.API.Members
 import GitLab.API.MergeRequests
+import GitLab.API.Notes
 import GitLab.API.Pipelines
 import GitLab.API.Projects
 import GitLab.API.Repositories

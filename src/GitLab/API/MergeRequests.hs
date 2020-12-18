@@ -52,7 +52,7 @@ createMergeRequest ::
   Text ->
   -- | merge request description
   Text ->
-  GitLab (Either Status MergeRequest)
+  GitLab (Either Status (Maybe MergeRequest))
 createMergeRequest project =
   createMergeRequest' (project_id project)
 
@@ -70,7 +70,7 @@ createMergeRequest' ::
   Text ->
   -- | merge request description
   Text ->
-  GitLab (Either Status MergeRequest)
+  GitLab (Either Status (Maybe MergeRequest))
 createMergeRequest' projectId sourceBranch targetBranch targetProjectId mrTitle mrDescription =
   gitlabPost addr dataBody
   where
@@ -91,7 +91,7 @@ acceptMergeRequest ::
   Project ->
   -- | merge request IID
   Int ->
-  GitLab (Either Status MergeRequest)
+  GitLab (Either Status (Maybe MergeRequest))
 acceptMergeRequest project =
   acceptMergeRequest' (project_id project)
 
@@ -101,7 +101,7 @@ acceptMergeRequest' ::
   Int ->
   -- | merge request IID
   Int ->
-  GitLab (Either Status MergeRequest)
+  GitLab (Either Status (Maybe MergeRequest))
 acceptMergeRequest' projectId mergeRequestIid = gitlabPost addr dataBody
   where
     dataBody :: Text

@@ -234,7 +234,7 @@ addGroupToProject ::
   Int ->
   -- | level of access granted
   AccessLevel ->
-  GitLab (Either Status GroupShare)
+  GitLab (Either Status (Maybe GroupShare))
 addGroupToProject groupId projectId access =
   gitlabPost addr dataBody
   where

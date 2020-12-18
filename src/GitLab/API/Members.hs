@@ -56,7 +56,7 @@ addMemberToProject ::
   AccessLevel ->
   -- | the user
   User ->
-  GitLab (Either Status Member)
+  GitLab (Either Status (Maybe Member))
 addMemberToProject project access usr =
   addMemberToProject' (project_id project) access (user_id usr)
 
@@ -70,7 +70,7 @@ addMemberToProject' ::
   AccessLevel ->
   -- | user ID
   Int ->
-  GitLab (Either Status Member)
+  GitLab (Either Status (Maybe Member))
 addMemberToProject' projectId access userId =
   gitlabPost addr dataBody
   where
@@ -90,7 +90,7 @@ addMembersToProject ::
   AccessLevel ->
   -- | users to add to the project
   [User] ->
-  GitLab [Either Status Member]
+  GitLab [Either Status (Maybe Member)]
 addMembersToProject project access =
   mapM (addMemberToProject project access)
 
@@ -104,6 +104,6 @@ addMembersToProject' ::
   AccessLevel ->
   -- | IDs of users to add to the project
   [Int] ->
-  GitLab [Either Status Member]
+  GitLab [Either Status (Maybe Member)]
 addMembersToProject' projectId access =
   mapM (addMemberToProject' projectId access)
