@@ -1185,15 +1185,19 @@ instance FromJSON RepositoryUpdate where
 instance FromJSON MergeRequestEvent where
   parseJSON =
     withObject "MergeRequestEvent" $ \v -> do
-      -- Note: it's `event_name` in all other examples.
+      -- Note: it's `event_name` in all other examples, but the GitLab
+      -- documentation for MergeRequests says `object_kind`.
+      --
+      -- `object_kind` has been tried.
+      --
       -- Bug in GitLab system hooks documentation?
-      isProjectEvent <- v .:? "object_kind"
+      isProjectEvent <- v .:? "event_name"
       case isProjectEvent of
         Just theEvent ->
           case theEvent of
             MergeRequested ->
               MergeRequestEvent
-                <$> v .: "object_kind"
+                <$> v .: "event_name"
                 <*> v .: "user"
                 <*> v .: "project"
                 <*> v .: "object_attributes"
