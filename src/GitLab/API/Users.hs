@@ -13,6 +13,7 @@ module GitLab.API.Users where
 import Data.List
 import Data.Maybe
 import Data.Text (Text)
+import qualified Data.Text as T
 import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
 
@@ -21,6 +22,22 @@ allUsers :: GitLab [User]
 allUsers = do
   let path = "/users"
   gitlabUnsafe path
+
+-- | searches for a user given a user ID. Returns @Just User@ if the
+-- user is found, otherwise @Nothing@.
+userId ::
+  -- | username to search for
+  Int ->
+  GitLab (Maybe User)
+userId usrId = do
+  let path =
+        "/users/"
+          <> T.pack (show usrId)
+  res <- gitlabOne path
+  case res of
+    Left _err -> return Nothing
+    Right Nothing -> return Nothing
+    Right (Just user) -> return (Just user)
 
 -- | searches for a user given a username. Returns @Just User@ if the
 -- user is found, otherwise @Nothing@.
