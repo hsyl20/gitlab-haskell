@@ -20,10 +20,10 @@ where
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader
-import Data.Time.Clock
 import Data.Typeable
 import GitLab.SystemHooks.Types
 import GitLab.Types
+import System.IO
 import System.IO.Temp
 import System.Posix.Files
 
@@ -46,12 +46,10 @@ traceSystemHook eventContent = do
   cfg <- serverCfg <$> ask
   when (debugSystemHooks cfg) $
     liftIO $ do
-      now <- getCurrentTime
-      let fname = map (\c -> if c == ' ' then '-' else c) (show now)
       withSystemTempFile
-        (fname <> ".gitlab-system-hook")
-        ( \fpath _handle -> void $ do
-            writeFile fpath eventContent
+        "gitlab-system-hook-"
+        ( \fpath tmpFileHandle -> void $ do
+            hPutStr tmpFileHandle eventContent
             setFileMode fpath otherReadMode
         )
 
