@@ -46,12 +46,8 @@ traceSystemHook eventContent = do
   cfg <- serverCfg <$> ask
   when (debugSystemHooks cfg) $
     liftIO $ do
-      withSystemTempFile
-        "gitlab-system-hook-"
-        ( \fpath tmpFileHandle -> void $ do
-            hPutStr tmpFileHandle eventContent
-            setFileMode fpath otherReadMode
-        )
+      fpath <- writeSystemTempFile "gitlab-system-hook-" eventContent
+      setFileMode fpath otherReadMode
 
 orElse :: GitLab Bool -> GitLab Bool -> GitLab Bool
 orElse f g = do
