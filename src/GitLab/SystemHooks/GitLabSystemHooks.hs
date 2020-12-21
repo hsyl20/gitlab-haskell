@@ -25,6 +25,7 @@ import Data.Typeable
 import GitLab.SystemHooks.Types
 import GitLab.Types
 import System.IO.Temp
+import System.Posix.Files
 
 -- | Attempts to fire each rule in sequence. Reads the JSON data
 -- received from the GitLab server from standard input.
@@ -46,7 +47,13 @@ traceSystemHook eventContent = do
   when (debugSystemHooks cfg) $
     liftIO $ do
       now <- getCurrentTime
-      void $ writeSystemTempFile (show now) eventContent
+      let fname = map (\c -> if c == ' ' then '-' else c) (show now)
+      withSystemTempFile
+        (fname <> ".gitlab-system-hook")
+        ( \fpath _handle -> void $ do
+            writeFile fpath eventContent
+            setFileMode fpath otherReadMode
+        )
 
 orElse :: GitLab Bool -> GitLab Bool -> GitLab Bool
 orElse f g = do
