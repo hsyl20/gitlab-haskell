@@ -95,6 +95,7 @@ library
               , unliftio
               , unliftio-core
               , time
+              , temporary
   default-language: Haskell2010
   ghc-options: -Wall
                -- the following two for the stan static analysis tool

@@ -81,7 +81,10 @@ data GitLabServerConfig = GitLabServerConfig
     -- | milliseconds
     timeout :: Int,
     -- | how many times to retry a HTTP request before giving up and returning an error.
-    retries :: Int
+    retries :: Int,
+    -- | write system hook events to files in the system temporary
+    -- directory.
+    debugSystemHooks :: Bool
   }
 
 -- | default settings, the 'url' and 'token' values will need to be overwritten.
@@ -91,7 +94,8 @@ defaultGitLabServer =
     { url = "https://gitlab.com",
       token = "",
       timeout = 15000000, -- 15 seconds
-      retries = 5
+      retries = 5,
+      debugSystemHooks = False
     }
 
 -- https://docs.gitlab.com/ee/api/repositories.html#get-file-archive

@@ -19,9 +19,12 @@ where
 
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Reader
+import Data.Time.Clock
 import Data.Typeable
 import GitLab.SystemHooks.Types
 import GitLab.Types
+import System.IO.Temp
 
 -- | Attempts to fire each rule in sequence. Reads the JSON data
 -- received from the GitLab server from standard input.
@@ -34,7 +37,16 @@ receive rules = do
 -- received from a function argument.
 receiveString :: String -> [Rule] -> GitLab ()
 receiveString eventContent rules = do
+  traceSystemHook eventContent
   mapM_ (fire eventContent) rules
+
+traceSystemHook :: String -> GitLab ()
+traceSystemHook eventContent = do
+  cfg <- serverCfg <$> ask
+  when (debugSystemHooks cfg) $
+    liftIO $ do
+      now <- getCurrentTime
+      void $ writeSystemTempFile (show now) eventContent
 
 orElse :: GitLab Bool -> GitLab Bool -> GitLab Bool
 orElse f g = do
