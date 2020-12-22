@@ -46,6 +46,8 @@ module GitLab.SystemHooks.Types
     CommitAuthorEvent (..),
     Visibility (..),
     MergeRequestEvent (..),
+    MergeRequestChanges (..),
+    MergeRequestChange (..),
     ObjectAttributes (..),
     MergeParams (..),
     UserEvent (..),
@@ -582,11 +584,34 @@ instance SystemHook MergeRequestEvent where
 -- in GitLab.Types.
 data MergeRequestEvent = MergeRequestEvent
   { mergeRequest_object_kind :: Text,
+    mergeRequest_event_type :: Text,
     mergeRequest_user :: UserEvent,
     mergeRequest_project :: ProjectEvent,
     mergeRequest_object_attributes :: ObjectAttributes,
-    mergeRequest_labels :: Maybe Text,
+    mergeRequest_labels :: Maybe [Text],
+    mergeRequest_changes :: MergeRequestChanges,
     mergeRequest_repository :: RepositoryEvent
+  }
+  deriving (Typeable, Show, Eq, Generic)
+
+data MergeRequestChanges = MergeRequestChanges
+  { mergeRequestChanges_author_id :: MergeRequestChange Int,
+    mergeRequestChanges_created_at :: MergeRequestChange Text,
+    mergeRequestChanges_description :: MergeRequestChange Text,
+    mergeRequestChanges_id :: MergeRequestChange Int,
+    mergeRequestChanges_iid :: MergeRequestChange Int,
+    mergeRequestChanges_source_branch :: MergeRequestChange Text,
+    mergeRequestChanges_source_project_id :: MergeRequestChange Int,
+    mergeRequestChanges_target_branch :: MergeRequestChange Text,
+    mergeRequestChanges_target_project_id :: MergeRequestChange Int,
+    mergeRequestChanges_title :: MergeRequestChange Text,
+    mergeRequestChanges_updated_at :: MergeRequestChange Text
+  }
+  deriving (Typeable, Show, Eq, Generic)
+
+data MergeRequestChange a = MergeRequestChange
+  { mergeRequestChange_previous :: Maybe a,
+    mergeRequestChange_current :: Maybe a
   }
   deriving (Typeable, Show, Eq, Generic)
 
@@ -596,12 +621,14 @@ data ObjectAttributes = ObjectAttributes
     objectAttributes_source_branch :: Text,
     objectAttributes_source_project_id :: Int,
     objectAttributes_author_id :: Int,
-    objectAttributes_assignee_id :: Int,
+    objectAttributes_assignee_id :: Maybe Int,
+    objectAttributes_assignee_ids :: Maybe [Int],
     objectAttributes_title :: Text,
     objectAttributes_created_at :: Text,
     objectAttributes_updated_at :: Text,
     objectAttributes_milestone_id :: Maybe Int,
     objectAttributes_state :: Text,
+    objectAttributes_state_id :: Maybe Int,
     objectAttributes_merge_status :: Text,
     objectAttributes_target_project_id :: Int,
     objectAttributes_iid :: Int,
@@ -616,10 +643,10 @@ data ObjectAttributes = ObjectAttributes
     objectAttributes_in_progress_merge_commit_sha :: Maybe Text,
     objectAttributes_lock_version :: Maybe Int,
     objectAttributes_time_estimate :: Int,
-    objectAttributes_last_edited_at :: Text,
-    objectAttributes_last_edited_by_id :: Int,
-    objectAttributes_head_pipeline_id :: Int,
-    objectAttributes_ref_fetched :: Bool,
+    objectAttributes_last_edited_at :: Maybe Text,
+    objectAttributes_last_edited_by_id :: Maybe Int,
+    objectAttributes_head_pipeline_id :: Maybe Int,
+    objectAttributes_ref_fetched :: Maybe Bool,
     objectAttributes_merge_jid :: Maybe Int,
     objectAttributes_source :: ProjectEvent,
     objectAttributes_target :: ProjectEvent,
@@ -627,12 +654,13 @@ data ObjectAttributes = ObjectAttributes
     objectAttributes_work_in_progress :: Bool,
     objectAttributes_total_time_spent :: Int,
     objectAttributes_human_total_time_spent :: Maybe Int,
-    objectAttributes_human_time_estimate :: Maybe Int
+    objectAttributes_human_time_estimate :: Maybe Int,
+    objectAttributes_action :: Maybe Text
   }
   deriving (Typeable, Show, Eq, Generic)
 
 data MergeParams = MergeParams
-  { mergeParams_force_remove_source_branch :: Text
+  { mergeParams_force_remove_source_branch :: Maybe Text
   }
   deriving (Typeable, Show, Eq, Generic)
 
@@ -1191,17 +1219,19 @@ instance FromJSON MergeRequestEvent where
       -- `object_kind` has been tried.
       --
       -- Bug in GitLab system hooks documentation?
-      isProjectEvent <- v .:? "event_name"
+      isProjectEvent <- v .:? "object_kind"
       case isProjectEvent of
         Just theEvent ->
           case theEvent of
             MergeRequested ->
               MergeRequestEvent
-                <$> v .: "event_name"
+                <$> v .: "object_kind"
+                <*> v .: "event_type"
                 <*> v .: "user"
                 <*> v .: "project"
                 <*> v .: "object_attributes"
                 <*> v .: "labels"
+                <*> v .: "changes"
                 <*> v .: "repository"
             _unexpected -> fail "merge_request parsing failed"
         _unexpected -> fail "merge_request parsing failed"
@@ -1249,11 +1279,13 @@ bodyNoPrefix "objectAttributes_source_branch" = "source_branch"
 bodyNoPrefix "objectAttributes_source_project_id" = "source_project_id"
 bodyNoPrefix "objectAttributes_author_id" = "author_id"
 bodyNoPrefix "objectAttributes_assignee_id" = "assignee_id"
+bodyNoPrefix "objectAttributes_assignee_ids" = "assignee_ids"
 bodyNoPrefix "objectAttributes_title" = "title"
 bodyNoPrefix "objectAttributes_created_at" = "created_at"
 bodyNoPrefix "objectAttributes_updated_at" = "updated_at"
 bodyNoPrefix "objectAttributes_milestone_id" = "milestone_id"
 bodyNoPrefix "objectAttributes_state" = "state"
+bodyNoPrefix "objectAttributes_state_id" = "state_id"
 bodyNoPrefix "objectAttributes_merge_status" = "merge_status"
 bodyNoPrefix "objectAttributes_target_project_id" = "target_project_id"
 bodyNoPrefix "objectAttributes_iid" = "iid"
@@ -1280,6 +1312,20 @@ bodyNoPrefix "objectAttributes_work_in_progress" = "work_in_progress"
 bodyNoPrefix "objectAttributes_total_time_spent" = "total_time_spent"
 bodyNoPrefix "objectAttributes_human_total_time_spent" = "human_total_time_spent"
 bodyNoPrefix "objectAttributes_human_time_estimate" = "human_time_estimate"
+bodyNoPrefix "objectAttributes_action" = "action"
+bodyNoPrefix "mergeRequestChanges_author_id" = "author_id"
+bodyNoPrefix "mergeRequestChanges_created_at" = "created_at"
+bodyNoPrefix "mergeRequestChanges_description" = "description"
+bodyNoPrefix "mergeRequestChanges_id" = "id"
+bodyNoPrefix "mergeRequestChanges_iid" = "iid"
+bodyNoPrefix "mergeRequestChanges_source_branch" = "source_branch"
+bodyNoPrefix "mergeRequestChanges_source_project_id" = "source_project_id"
+bodyNoPrefix "mergeRequestChanges_target_branch" = "target_branch"
+bodyNoPrefix "mergeRequestChanges_target_project_id" = "target_project_id"
+bodyNoPrefix "mergeRequestChanges_title" = "title"
+bodyNoPrefix "mergeRequestChanges_updated_at" = "updated_at"
+bodyNoPrefix "mergeRequestChange_previous" = "previous"
+bodyNoPrefix "mergeRequestChange_current" = "current"
 bodyNoPrefix s = error ("uexpected JSON field prefix: " <> s)
 
 instance FromJSON ProjectEvent where
@@ -1339,6 +1385,22 @@ instance FromJSON MergeParams where
       )
 
 instance FromJSON UserEvent where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON MergeRequestChanges where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance (FromJSON a) => FromJSON (MergeRequestChange a) where
   parseJSON =
     genericParseJSON
       ( defaultOptions
