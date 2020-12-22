@@ -17,13 +17,13 @@ module GitLab.SystemHooks.GitLabSystemHooks
   )
 where
 
+import qualified Control.Exception as E
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader
 import Data.Typeable
 import GitLab.SystemHooks.Types
 import GitLab.Types
-import System.IO
 import System.IO.Temp
 import System.Posix.Files
 
@@ -44,10 +44,14 @@ receiveString eventContent rules = do
 traceSystemHook :: String -> GitLab ()
 traceSystemHook eventContent = do
   cfg <- serverCfg <$> ask
-  when (debugSystemHooks cfg) $
-    liftIO $ do
-      fpath <- writeSystemTempFile "gitlab-system-hook-" eventContent
-      setFileMode fpath otherReadMode
+  liftIO $
+    E.catch
+      ( when (debugSystemHooks cfg) $ do
+          fpath <- writeSystemTempFile "gitlab-system-hook-" eventContent
+          void $ setFileMode fpath otherReadMode
+      )
+      -- runGitLabDbg must have been used, which doesn't define a GitLabServerConfig
+      (\(_exception :: E.ErrorCall) -> return ())
 
 orElse :: GitLab Bool -> GitLab Bool -> GitLab Bool
 orElse f g = do
