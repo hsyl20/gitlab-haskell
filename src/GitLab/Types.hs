@@ -158,7 +158,7 @@ data Namespace = Namespace
 -- | links.
 data Links = Links
   { self :: Text,
-    issues :: Text,
+    issues :: Maybe Text,
     merge_requests :: Text,
     repo_branches :: Text,
     link_labels :: Text,
