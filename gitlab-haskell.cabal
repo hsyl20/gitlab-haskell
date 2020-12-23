@@ -10,10 +10,10 @@ description:
             .
             Run all GitLab actions with `runGitLab`:
             .
-            > runGitLab :: (MonadUnliftIO m, MonadIO m)
+            > runGitLab ::
             >  => GitLabServerConfig -- ^ the GitLab server details
-            >  -> GitLab m a         -- ^ the GitLab action
-            >  -> m a
+            >  -> GitLab a           -- ^ the GitLab action
+            >  -> IO a
             .
             For example:
             .
@@ -25,8 +25,9 @@ description:
             .
             Which uses the functions:
             .
-            > searchUser   :: Text -> GitLab m (Maybe User)
-            > userProjects :: User -> GitLab m (Maybe [Project])
+            > searchUser   :: Text -> GitLab (Maybe User)
+            > userProjects :: User -> GitLab (Maybe [Project])
+            > projectCommits :: Project -> GitLab [Commit]
             .
             This library can also be used to develop rule based GitLab file hooks that react in real time to GitLab events with:
             .

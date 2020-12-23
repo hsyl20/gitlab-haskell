@@ -24,10 +24,9 @@ The library parses JSON results into Haskell data types in the
 Run all GitLab actions with `runGitLab`: 
 
     runGitLab ::
-      (MonadUnliftIO m, MonadIO m)
        => GitLabServerConfig
-       -> GitLab m a
-       -> m a
+       -> GitLab a
+       -> IO a
 
 For example:
 
@@ -40,8 +39,26 @@ For example:
 
 Which uses the functions:
 
-    searchUser   :: Text -> GitLab m (Maybe User)
-    userProjects :: User -> GitLab m (Maybe [Project])
+    searchUser     :: Text -> GitLab (Maybe User)
+    userProjects   :: User -> GitLab (Maybe [Project])
+    projectCommits :: Project -> GitLab [Commit]
+
+This library can also be used to implement rule based GitLab file
+system hooks that, when deployed a GitLab server, react in real time
+to GitLab events like project creation, new users, merge requests etc.
+
+The rule based API for implementing file hooks is:
+
+    receive :: [Rule] -> GitLab ()
+
+    class (FromJSON a) => SystemHook a where
+      match   :: String -> (a -> GitLab ()) -> Rule
+      matchIf :: String -> (a -> GitLab Bool) -> (a -> GitLab ()) -> Rule
+
+For more details about the file system hooks support, see post:
+[GitLab automation with file hook rules](https://www.macs.hw.ac.uk/~rs46/posts/2020-06-06-gitlab-system-hooks.html).
+
+For the complete `gitlab-haskell` API, see the [hackage documentation](https://hackage.haskell.org/package/gitlab-haskell).
 
 The `gitlab-tools` command line tool for bulk GitLab transactions uses
 this library [link](https://gitlab.com/robstewart57/gitlab-tools).
