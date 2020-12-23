@@ -17,7 +17,13 @@ about and updates to:
 * Users
 
 The library parses JSON results into Haskell data types in the
-`GitLab.Types` module.
+`GitLab.Types` module, allowing you to work with statically typed
+GitLab data with data types and functions that the library
+provides. E.g.
+
+    searchUser     :: Text -> GitLab (Maybe User)
+    userProjects   :: User -> GitLab (Maybe [Project])
+    projectCommits :: Project -> GitLab [Commit]
 
 ## Example
 
@@ -36,12 +42,6 @@ For example:
            { url = "https://gitlab.example.com"
            , token="my_token"} )
         (searchUser "joe" >>= userProjects . fromJust)
-
-Which uses the functions:
-
-    searchUser     :: Text -> GitLab (Maybe User)
-    userProjects   :: User -> GitLab (Maybe [Project])
-    projectCommits :: Project -> GitLab [Commit]
 
 This library can also be used to implement rule based GitLab file
 system hooks that, when deployed a GitLab server, react in real time
