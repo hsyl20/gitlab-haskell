@@ -16,6 +16,34 @@ import GitLab.Types
 import GitLab.WebRequests.GitLabWebCalls
 import Network.HTTP.Types.Status
 
+-- | returns the merge request for a project given its merge request
+-- IID.
+mergeRequest ::
+  -- | project
+  Project ->
+  -- | merge request IID
+  Int ->
+  GitLab (Either Status (Maybe MergeRequest))
+mergeRequest project =
+  mergeRequest' (project_id project)
+
+-- | returns the merge request for a project given its project ID and
+-- merge request IID.
+mergeRequest' ::
+  -- | project ID
+  Int ->
+  -- | merge request IID
+  Int ->
+  GitLab (Either Status (Maybe MergeRequest))
+mergeRequest' projectId mergeRequestIID =
+  gitlabOne addr
+  where
+    addr =
+      "/projects/"
+        <> T.pack (show projectId)
+        <> "/merge_requests/"
+        <> T.pack (show mergeRequestIID)
+
 -- | returns the merge requests for a project.
 mergeRequests ::
   -- | the project
