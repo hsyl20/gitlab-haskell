@@ -292,7 +292,7 @@ instance FromJSON Milestone where
 data TimeStats = TimeStats
   { time_estimate :: Int,
     total_time_spent :: Int,
-    humane_time_estimate :: Maybe Int,
+    human_time_estimate :: Maybe Int,
     human_total_time_spent :: Maybe Int
   }
   deriving (Generic, Show)
@@ -528,7 +528,7 @@ data MergeRequest = MergeRequest
     merge_request_web_url :: Text,
     merge_request_time_stats :: TimeStats,
     merge_request_squash :: Bool,
-    merge_request_changes_count :: Maybe Int,
+    merge_request_changes_count :: Maybe String,
     merge_request_pipeline :: Maybe Pipeline,
     merge_request_diverged_commits_count :: Maybe Int,
     merge_request_rebase_in_progress :: Maybe Bool,
@@ -707,12 +707,12 @@ bodyNoPrefix "repository_id" = "id"
 bodyNoPrefix "repository_name" = "name"
 bodyNoPrefix "repository_path" = "path"
 bodyNoPrefix "repository_type" = "type"
-bodyNoPrefix "user_avatar_url" = "avatar_url"
+bodyNoPrefix "user_avatar_uri" = "avatar_url"
 bodyNoPrefix "user_id" = "id"
 bodyNoPrefix "user_name" = "name"
 bodyNoPrefix "user_state" = "state"
 bodyNoPrefix "user_username" = "username"
-bodyNoPrefix "user_web_url" = "we_url"
+bodyNoPrefix "user_web_url" = "web_url"
 bodyNoPrefix "event_title" = "title"
 bodyNoPrefix "event_project_id" = "project_id"
 bodyNoPrefix "pipeline_ref" = "ref"
