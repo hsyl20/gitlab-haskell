@@ -37,18 +37,31 @@ projectCommits' projectId =
     commitsAddr projId =
       "/projects/" <> T.pack (show projId) <> "/repository" <> "/commits"
 
+-- | returns all commits of a branch from a project given the branch
+-- name.
+branchCommits ::
+  -- | project
+  Project ->
+  -- | branch name
+  Text ->
+  GitLab (Either Status [Commit])
+branchCommits project =
+  branchCommits' (project_id project)
+
 -- | returns all commits of a branch from a project
 -- given its project ID and the branch name.
-branchCommits ::
+branchCommits' ::
   -- | project ID
   Int ->
   -- | branch name
   Text ->
-  GitLab [Commit]
-branchCommits projectId branchName = do
-  let addr = "/projects/" <> T.pack (show projectId) <> "/repository/commits"
-  result <- gitlabWithAttrs addr ("&ref_name=" <> branchName)
-  return (fromRight (error "branchCommits error") result)
+  GitLab (Either Status [Commit])
+branchCommits' projectId branchName = do
+  gitlabWithAttrs (commitsAddr projectId) ("&ref_name=" <> branchName)
+  where
+    commitsAddr :: Int -> Text
+    commitsAddr projId =
+      "/projects/" <> T.pack (show projId) <> "/repository" <> "/commits"
 
 -- | returns a commit for the given project and commit hash, if such
 -- a commit exists.
