@@ -76,7 +76,7 @@ addUserToGroup' ::
   -- | user ID
   Int ->
   GitLab (Either Status (Maybe Member))
-addUserToGroup' groupName access userId = do
+addUserToGroup' groupName access usrId = do
   attempt <- groupsWithNameOrPath groupName
   case attempt of
     Left httpStatus -> return (Left httpStatus)
@@ -86,7 +86,7 @@ addUserToGroup' groupName access userId = do
       where
         dataBody :: Text
         dataBody =
-          "user_id=" <> T.pack (show userId) <> "&access_level="
+          "user_id=" <> T.pack (show usrId) <> "&access_level="
             <> T.pack (show access)
         addr =
           "/groups/"

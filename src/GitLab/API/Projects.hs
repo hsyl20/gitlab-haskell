@@ -116,7 +116,7 @@ userProjects' username = do
     Nothing -> return Nothing
     Just usr -> Just <$> gitlabUnsafe (urlPath (user_id usr))
   where
-    urlPath userId = "/users/" <> T.pack (show userId) <> "/projects"
+    urlPath usrId = "/users/" <> T.pack (show usrId) <> "/projects"
 
 -- | gets all projects for a user.
 --
