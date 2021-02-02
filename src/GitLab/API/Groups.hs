@@ -119,3 +119,22 @@ addUsersToGroup' ::
 addUsersToGroup' groupName access usernames = do
   users <- catMaybes <$> mapM searchUser usernames
   mapM (addUserToGroup' groupName access . user_id) users
+
+groupProjects ::
+  -- | group
+  Group ->
+  GitLab (Either Status [Project])
+groupProjects group = do
+  groupProjects' (group_id group)
+
+groupProjects' ::
+  -- | group ID
+  Int ->
+  GitLab (Either Status [Project])
+groupProjects' groupID = do
+  let urlPath =
+        T.pack $
+          "/groups/"
+            <> show groupID
+            <> "/projects"
+  gitlab urlPath
