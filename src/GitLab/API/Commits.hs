@@ -23,7 +23,8 @@ projectCommits ::
   GitLab [Commit]
 projectCommits project = do
   result <- projectCommits' (project_id project)
-  return (fromRight (error "projectCommits error") result)
+  -- return an empty list if the repository could not be found.
+  return (fromRight [] result)
 
 -- | returns all commits for a project given its project ID.
 projectCommits' ::
