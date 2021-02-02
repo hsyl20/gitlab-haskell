@@ -27,6 +27,7 @@ module GitLab
     module GitLab.API.Todos,
     module GitLab.API.Version,
     module GitLab.API.Notes,
+    module GitLab.API.Discussions,
     module GitLab.SystemHooks.GitLabSystemHooks,
     module GitLab.SystemHooks.Types,
     module GitLab.SystemHooks.Rules,
@@ -37,6 +38,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader
 import GitLab.API.Branches
 import GitLab.API.Commits
+import GitLab.API.Discussions
 import GitLab.API.Groups
 import GitLab.API.Issues
 import GitLab.API.Jobs
