@@ -26,7 +26,7 @@ import Control.Monad.Trans.Reader
 import Data.Aeson
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import Data.ByteString.Lazy.Char8 as C
+import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Either
 import Data.Text (Text)
 import qualified Data.Text as T
