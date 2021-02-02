@@ -77,6 +77,7 @@ library
                 , GitLab.API.Todos
                 , GitLab.API.Version
                 , GitLab.API.Notes
+                , GitLab.API.Discussions
                 , GitLab.SystemHooks.Types
                 , GitLab.SystemHooks.GitLabSystemHooks
                 , GitLab.SystemHooks.Rules
