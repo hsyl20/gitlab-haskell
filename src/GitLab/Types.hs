@@ -52,6 +52,7 @@ module GitLab.Types
     Version (..),
     URL,
     EditIssueReq (..),
+    Discussion (..),
   )
 where
 
@@ -654,6 +655,33 @@ data EditIssueReq = EditIssueReq
   }
   deriving (Generic, Show)
 
+-- | Discussions https://docs.gitlab.com/ee/api/discussions.html
+data Discussion = Discussion
+  { discussion_id :: Text,
+    discussion_individual_note :: Bool,
+    discussion_notes :: [Note]
+  }
+  deriving (Generic, Show)
+
+-- | Notes
+data Note = Note
+  { note_id :: Int,
+    -- https://docs.gitlab.com/ee/api/discussions.html#list-project-commit-discussion-items
+    note_type :: Maybe Text, -- TODO create type for this, e.g. from "DiscussionNote"
+    note_body :: Text,
+    note_attachment :: Maybe Text,
+    note_author :: Owner,
+    --  -- TODO parse these as date type
+    note_created_at :: Text,
+    note_updated_at :: Text,
+    note_system :: Bool,
+    note_noteable_id :: Maybe Int,
+    note_noteable_type :: Maybe Text, -- create type e.g. from "Commit"
+    note_noteable_iid :: Maybe Int,
+    note_resolvable :: Bool
+  }
+  deriving (Generic, Show)
+
 -----------------------------
 -- JSON GitLab parsers below
 -----------------------------
@@ -804,6 +832,21 @@ bodyNoPrefix "job_status" = "status"
 bodyNoPrefix "job_tag" = "tag"
 bodyNoPrefix "job_web_url" = "web_url"
 bodyNoPrefix "job_user" = "user"
+bodyNoPrefix "discussion_id" = "id"
+bodyNoPrefix "discussion_individual_note" = "individual_note"
+bodyNoPrefix "discussion_notes" = "notes"
+bodyNoPrefix "note_id" = "id"
+bodyNoPrefix "note_type" = "type"
+bodyNoPrefix "note_body" = "body"
+bodyNoPrefix "note_attachment" = "attachment"
+bodyNoPrefix "note_author" = "author"
+bodyNoPrefix "note_created_at" = "created_at"
+bodyNoPrefix "note_updated_at" = "updated_at"
+bodyNoPrefix "note_system" = "system"
+bodyNoPrefix "note_noteable_id" = "noteable_id"
+bodyNoPrefix "note_noteable_type" = "noteable_type"
+bodyNoPrefix "note_noteable_iid" = "iid"
+bodyNoPrefix "note_resolvable" = "resolvable"
 -- TODO field names for Issues data type
 bodyNoPrefix s = s
 
@@ -1006,3 +1049,19 @@ instance ToJSON EditIssueReq where
         { fieldLabelModifier = drop (T.length "edit_issue_"),
           omitNothingFields = True
         }
+
+instance FromJSON Discussion where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON Note where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
