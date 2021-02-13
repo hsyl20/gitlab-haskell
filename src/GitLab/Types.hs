@@ -35,6 +35,7 @@ module GitLab.Types
     Commit (..),
     CommitTodo (..),
     CommitStats (..),
+    Tag (..),
     Diff (..),
     Repository (..),
     Job (..),
@@ -377,6 +378,12 @@ data CommitStats = Stats
   { additions :: Int,
     deletions :: Int,
     total :: Int
+  }
+  deriving (Generic, Show)
+
+-- | tags.
+data Tag = Tag
+  { commit :: Commit
   }
   deriving (Generic, Show)
 
@@ -883,6 +890,14 @@ instance FromJSON Commit where
       )
 
 instance FromJSON CommitTodo where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON Tag where
   parseJSON =
     genericParseJSON
       ( defaultOptions
