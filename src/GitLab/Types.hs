@@ -865,16 +865,26 @@ bodyNoPrefix "note_noteable_id" = "noteable_id"
 bodyNoPrefix "note_noteable_type" = "noteable_type"
 bodyNoPrefix "note_noteable_iid" = "iid"
 bodyNoPrefix "note_resolvable" = "resolvable"
-bodyNoPrefix "tag_commit" = "commit"
-bodyNoPrefix "tag_release" = "release"
-bodyNoPrefix "tag_name" = "name"
-bodyNoPrefix "tag_target" = "target"
-bodyNoPrefix "tag_message" = "message"
-bodyNoPrefix "tag_protected" = "protected"
-bodyNoPrefix "release_tag_name" = "tag_name"
-bodyNoPrefix "release_description" = "description"
 -- TODO field names for Issues data type
 bodyNoPrefix s = s
+
+-- TODO refactor bodyNoPrefix function above into smaller
+--    String -> String
+-- functions like those below.
+
+tagPrefix :: String -> String
+tagPrefix "tag_commit" = "commit"
+tagPrefix "tag_release" = "release"
+tagPrefix "tag_name" = "name"
+tagPrefix "tag_target" = "target"
+tagPrefix "tag_message" = "message"
+tagPrefix "tag_protected" = "protected"
+tagPrefix s = s
+
+releasePrefix :: String -> String
+releasePrefix "release_tag_name" = "tag_name"
+releasePrefix "release_description" = "description"
+releasePrefix s = s
 
 instance FromJSON TimeStats where
   parseJSON =
@@ -920,7 +930,7 @@ instance FromJSON Tag where
   parseJSON =
     genericParseJSON
       ( defaultOptions
-          { fieldLabelModifier = bodyNoPrefix
+          { fieldLabelModifier = tagPrefix
           }
       )
 
@@ -928,7 +938,7 @@ instance FromJSON Release where
   parseJSON =
     genericParseJSON
       ( defaultOptions
-          { fieldLabelModifier = bodyNoPrefix
+          { fieldLabelModifier = releasePrefix
           }
       )
 
