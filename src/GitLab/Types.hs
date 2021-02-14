@@ -383,7 +383,18 @@ data CommitStats = Stats
 
 -- | tags.
 data Tag = Tag
-  { commit :: Commit
+  { tag_commit :: Commit,
+    tag_release :: Maybe Release,
+    tag_name :: Text,
+    tag_target :: Text,
+    tag_message :: Maybe Text,
+    tag_protected :: Bool
+  }
+  deriving (Generic, Show)
+
+data Release = Release
+  { release_tag_name :: Text,
+    release_description :: Text
   }
   deriving (Generic, Show)
 
@@ -854,6 +865,14 @@ bodyNoPrefix "note_noteable_id" = "noteable_id"
 bodyNoPrefix "note_noteable_type" = "noteable_type"
 bodyNoPrefix "note_noteable_iid" = "iid"
 bodyNoPrefix "note_resolvable" = "resolvable"
+bodyNoPrefix "tag_commit" = "commit"
+bodyNoPrefix "tag_release" = "release"
+bodyNoPrefix "tag_name" = "name"
+bodyNoPrefix "tag_target" = "target"
+bodyNoPrefix "tag_message" = "message"
+bodyNoPrefix "tag_protected" = "protected"
+bodyNoPrefix "release_tag_name" = "tag_name"
+bodyNoPrefix "release_description" = "description"
 -- TODO field names for Issues data type
 bodyNoPrefix s = s
 
@@ -898,6 +917,14 @@ instance FromJSON CommitTodo where
       )
 
 instance FromJSON Tag where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON Release where
   parseJSON =
     genericParseJSON
       ( defaultOptions
