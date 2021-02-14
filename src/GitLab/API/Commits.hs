@@ -45,9 +45,10 @@ branchCommits ::
   Project ->
   -- | branch name
   Text ->
-  GitLab (Either Status [Commit])
-branchCommits project =
-  branchCommits' (project_id project)
+  GitLab [Commit]
+branchCommits project branchName = do
+  result <- branchCommits' (project_id project) branchName
+  return (fromRight [] result)
 
 -- | returns all commits of a branch from a project
 -- given its project ID and the branch name.
