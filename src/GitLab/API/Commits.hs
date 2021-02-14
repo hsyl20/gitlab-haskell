@@ -75,7 +75,7 @@ commitDetails ::
   GitLab (Maybe Commit)
 commitDetails project theHash = do
   result <- commitDetails' (project_id project) theHash
-  return (fromRight (error "commitDetails error") result)
+  return (fromRight Nothing result)
 
 -- | returns a commit for the given project ID and commit hash, if
 -- such a commit exists.
