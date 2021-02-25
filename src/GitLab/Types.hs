@@ -161,7 +161,7 @@ data Namespace = Namespace
 data Links = Links
   { self :: Text,
     issues :: Maybe Text,
-    merge_requests :: Text,
+    merge_requests :: Maybe Text,
     repo_branches :: Text,
     link_labels :: Text,
     link_events :: Text,
