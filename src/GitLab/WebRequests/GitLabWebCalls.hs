@@ -10,8 +10,7 @@ module GitLab.WebRequests.GitLabWebCalls
     gitlabOne,
     -- gitlabOneIO,
     gitlabWithAttrsOne,
-    -- not currently used.
-    -- gitlabWithAttrsOneUnsafe,
+    gitlabWithAttrsOneUnsafe,
     gitlabPost,
     gitlabPut,
     gitlabDelete,
@@ -289,9 +288,9 @@ gitlabWithAttrsOne :: (FromJSON a) => Text -> Text -> GitLab (Either Status (May
 gitlabWithAttrsOne = gitlabReqJsonOne
 
 -- not currently used.
--- gitlabWithAttrsOneUnsafe :: (MonadIO m, FromJSON a) => Text -> Text -> GitLab (Maybe a)
--- gitlabWithAttrsOneUnsafe gitlabURL attrs =
---   fromRight (error "gitlabWithAttrsUnsafe error") <$> gitlabReqJsonOne gitlabURL attrs
+gitlabWithAttrsOneUnsafe :: (FromJSON a) => Text -> Text -> GitLab (Maybe a)
+gitlabWithAttrsOneUnsafe gitlabURL attrs =
+  fromRight (error "gitlabWithAttrsUnsafe error") <$> gitlabReqJsonOne gitlabURL attrs
 
 totalPages :: Response a -> Int
 totalPages resp =
