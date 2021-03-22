@@ -56,7 +56,8 @@ module GitLab.Types
     Discussion (..),
     Stats (..),
     Statistics (..),
-    StatisticsCounts (..)
+    StatisticsCounts (..),
+    Label (..)
   )
 where
 
@@ -720,6 +721,21 @@ data StatisticsCounts = StatisticsCounts
   }
   deriving (Show, Eq, Generic)
 
+data Label = Label
+  { label_id                        :: Int
+  , label_name                      :: Text
+  , label_color                     :: Text
+  , label_text_color                :: Text
+  , label_description               :: Maybe Text
+  , label_description_html          :: Text
+  , label_open_issues_count         :: Word
+  , label_closed_issues_count       :: Word
+  , label_open_merge_requests_count :: Word
+  , label_subscribed                :: Bool
+  , label_priority                  :: Maybe Int
+  , label_is_project_label          :: Bool
+  }
+  deriving (Show, Eq, Generic)
 
 -----------------------------
 -- JSON GitLab parsers below
@@ -891,6 +907,18 @@ bodyNoPrefix "statistics_counts" = "counts"
 bodyNoPrefix "statistics_counts_all" = "all"
 bodyNoPrefix "statistics_counts_closed" = "closed"
 bodyNoPrefix "statistics_counts_opened" = "opened"
+bodyNoPrefix "label_id" = "id"
+bodyNoPrefix "label_name" = "name"
+bodyNoPrefix "label_color" = "color"
+bodyNoPrefix "label_text_color" = "text_color"
+bodyNoPrefix "label_description" = "description"
+bodyNoPrefix "label_description_html" = "description_html"
+bodyNoPrefix "label_open_issues_count" = "open_issues_count"
+bodyNoPrefix "label_closed_issues_count" = "closed_issues_count"
+bodyNoPrefix "label_open_merge_requests_count" = "open_merge_requests_count"
+bodyNoPrefix "label_subscribed" = "subscribed"
+bodyNoPrefix "label_priority" = "priority"
+bodyNoPrefix "label_is_project_label" = "is_project_label"
 -- TODO field names for Issues data type
 bodyNoPrefix s = s
 
@@ -1161,6 +1189,14 @@ instance FromJSON Statistics where
       )
 
 instance FromJSON StatisticsCounts where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON Label where
   parseJSON =
     genericParseJSON
       ( defaultOptions
