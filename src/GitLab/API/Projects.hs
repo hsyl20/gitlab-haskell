@@ -166,7 +166,7 @@ issuesOnForks projectName = do
       Project ->
       GitLab (Project, [Issue], [User])
     processProject proj = do
-      (openIssues :: [Issue]) <- projectOpenedIssues proj
+      (openIssues :: [Issue]) <- projectIssues proj defaultIssueFilters
       let authors = map issue_author openIssues
       return (proj, openIssues, authors)
 
