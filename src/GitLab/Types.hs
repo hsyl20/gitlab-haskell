@@ -54,6 +54,9 @@ module GitLab.Types
     URL,
     EditIssueReq (..),
     Discussion (..),
+    Stats (..),
+    Statistics (..),
+    StatisticsCounts (..)
   )
 where
 
@@ -374,7 +377,7 @@ data CommitTodo = CommitTodo
   deriving (Generic, Show)
 
 -- | commit stats.
-data CommitStats = Stats
+data CommitStats = CommitStats
   { additions :: Int,
     deletions :: Int,
     total :: Int
@@ -700,6 +703,24 @@ data Note = Note
   }
   deriving (Generic, Show)
 
+data Stats = Stats
+  { statistics :: Statistics
+  }
+  deriving (Show, Eq, Generic)
+
+data Statistics = Statistics
+  { statistics_counts :: StatisticsCounts
+  }
+  deriving (Show, Eq, Generic)
+
+data StatisticsCounts = StatisticsCounts
+  { statistics_counts_all    :: Word
+  , statistics_counts_closed :: Word
+  , statistics_counts_opened :: Word
+  }
+  deriving (Show, Eq, Generic)
+
+
 -----------------------------
 -- JSON GitLab parsers below
 -----------------------------
@@ -865,6 +886,11 @@ bodyNoPrefix "note_noteable_id" = "noteable_id"
 bodyNoPrefix "note_noteable_type" = "noteable_type"
 bodyNoPrefix "note_noteable_iid" = "iid"
 bodyNoPrefix "note_resolvable" = "resolvable"
+bodyNoPrefix "statistics" = "statistics"
+bodyNoPrefix "statistics_counts" = "counts"
+bodyNoPrefix "statistics_counts_all" = "all"
+bodyNoPrefix "statistics_counts_closed" = "closed"
+bodyNoPrefix "statistics_counts_opened" = "opened"
 -- TODO field names for Issues data type
 bodyNoPrefix s = s
 
@@ -1117,3 +1143,28 @@ instance FromJSON Note where
           { fieldLabelModifier = bodyNoPrefix
           }
       )
+
+instance FromJSON Stats where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON Statistics where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
+instance FromJSON StatisticsCounts where
+  parseJSON =
+    genericParseJSON
+      ( defaultOptions
+          { fieldLabelModifier = bodyNoPrefix
+          }
+      )
+
