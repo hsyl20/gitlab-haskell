@@ -277,7 +277,7 @@ data Milestone = Milestone
     milestone_group_id :: Maybe Int,
     milestone_description :: Text,
     milestone_state :: MilestoneState,
-    milestone_due_date :: Maybe UTCTime,
+    milestone_due_date :: Maybe Text,
     milestone_iid :: Int,
     milestone_created_at :: Maybe UTCTime,
     milestone_title :: Text,
